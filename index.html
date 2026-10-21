@@ -364,6 +364,52 @@
     .fade-in { animation: fadeIn .2s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } }
 
+    /* ── Settings & quote ── */
+    .narrow { max-width: 900px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .input-affix { position: relative; }
+    .input-affix span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
+    .input-affix input { padding-left: 28px; }
+    .input-affix.suffix span { left: auto; right: 12px; }
+    .input-affix.suffix input { padding-left: 12px; padding-right: 52px; }
+    .hint { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .section-desc { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+    .dirty { font-size: 12.5px; color: var(--amber); display: inline-flex; align-items: center; gap: 6px; }
+    .dirty::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .save-state { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; }
+    .save-state i { color: var(--green); font-size: 11px; }
+    .num-input { width: 96px; text-align: right; font-variant-numeric: tabular-nums; }
+    .svc-table { width: 100%; border-collapse: collapse; }
+    .svc-table td { padding: 10px 18px; }
+    .svc-table th { padding: 10px 18px; }
+
+    input[type=checkbox] { width: 16px; height: 16px; padding: 0; margin-top: 8px; accent-color: var(--accent); cursor: pointer; box-shadow: none; }
+    .qtable { min-width: 640px; }
+    .qtable th, .qtable td { padding: 8px 8px; vertical-align: top; }
+    .qtable th:first-child, .qtable td:first-child { padding-left: 18px; width: 34px; }
+    .qtable th:last-child, .qtable td:last-child { padding-right: 14px; width: 44px; }
+    .qtable tbody tr:hover td { background: var(--panel-2); }
+    .cell { height: 32px; padding: 0 8px; background: transparent; border-color: transparent; }
+    .cell:hover { border-color: var(--border-strong); }
+    .cell:focus { background: var(--bg); }
+    .cell.sub { height: 26px; font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+    .cell.num { text-align: right; font-variant-numeric: tabular-nums; width: 84px; -moz-appearance: textfield; }
+    .cell.num::-webkit-inner-spin-button, .cell.num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .qtable .input-affix { width: 96px; }
+    .qtable .input-affix input { width: 100%; padding-left: 24px; }
+    .qtable .input-affix span { left: 9px; font-size: 12.5px; }
+    .qtable .amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 500; padding-top: 14px; }
+    .qtable tr.off .cell, .qtable tr.off .amt, .qtable tr.off .input-affix span { opacity: .4; }
+    .q-foot { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; padding: 14px 18px; border-top: 1px solid var(--border); }
+    .totals { display: flex; flex-direction: column; gap: 8px; min-width: 260px; }
+    .totals .tr { display: flex; justify-content: space-between; gap: 24px; font-size: 13.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+    .totals .tr.grand { color: var(--text); font-size: 18px; font-weight: 600; padding-top: 10px; margin-top: 2px; border-top: 1px solid var(--border); }
+    .alert.info { background: var(--accent-soft); color: var(--text); border: 1px solid rgba(124,108,255,.25); align-items: center; margin-bottom: 16px; }
+    .alert.info > i { color: var(--accent-2); }
+    .quote-card { display: block; transition: background .12s, border-color .12s; }
+    .quote-card:hover { background: var(--panel-2); border-color: var(--border-strong); }
+
     /* ── Responsive ── */
     @media (max-width: 1080px) {
       .detail-grid { grid-template-columns: 1fr; }
@@ -381,6 +427,7 @@
       .quick .divider { display: none; }
       .quick .q-status { flex: 1 1 140px; }
       .search { width: 100%; }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -403,6 +450,12 @@
       <i class="fa-solid fa-fire"></i>
       <span data-i18n="needsAttention">Needs attention</span>
       <span class="nav-count hot" id="nav-count-attention">0</span>
+    </a>
+
+    <div class="nav-label" data-i18n="general">General</div>
+    <a class="nav-item" id="nav-settings" href="#/settings">
+      <i class="fa-solid fa-gear"></i>
+      <span data-i18n="settings">Settings</span>
     </a>
 
     <div class="sidebar-foot">
@@ -488,6 +541,12 @@
 
       <!-- Detail view -->
       <section id="view-detail" hidden></section>
+
+      <!-- Settings view -->
+      <section id="view-settings" hidden></section>
+
+      <!-- Quote view -->
+      <section id="view-quote" hidden></section>
     </div>
   </main>
 </div>
@@ -532,11 +591,11 @@
 <!-- Delete confirm -->
 <div class="modal-backdrop" id="confirm" onclick="if (event.target === this) closeConfirm()">
   <div class="modal" role="alertdialog" aria-modal="true" style="width:400px">
-    <div class="modal-head"><div class="modal-title" data-i18n="deleteTitle"></div></div>
+    <div class="modal-head"><div class="modal-title" id="confirm-title"></div></div>
     <div class="modal-body"><p id="confirm-text"></p></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeConfirm()" data-i18n="cancel"></button>
-      <button class="btn btn-danger" onclick="confirmDelete()" data-i18n="delete"></button>
+      <button class="btn btn-danger" id="confirm-ok" onclick="runConfirm()"></button>
     </div>
   </div>
 </div>
@@ -595,6 +654,31 @@
       toastScanAllStart: (n) => 'Scanning ' + n + ' lead(s)…',
       toastNoServer: 'Scanner server not running — start with: node server.js',
       toastCrit: (n) => n + ' critical issue(s) found', toastWarn: (n) => n + ' warning(s) found', toastClean: 'Scan complete — no major issues',
+      general: 'General', settings: 'Settings', settingsSub: 'Your business details, rates and quote defaults.',
+      business: 'Business details', businessDesc: 'Shown at the top and bottom of your quotes.',
+      sCompanyName: 'Company name', sContactName: 'Contact person', sEmail: 'Email', sPhone: 'Phone', sAddress: 'Address', sWebsite: 'Website',
+      sKvk: 'Chamber of Commerce no.', sVatNumber: 'VAT number', sIban: 'IBAN',
+      rates: 'Rates & quotes', ratesDesc: 'Used whenever you create a new quote.',
+      sHourlyRate: 'Hourly rate', sVatRate: 'VAT', sValidDays: 'Valid for', days: 'days',
+      sQuotePrefix: 'Quote number prefix', sNextNumber: 'Next quote number', sNumberPreview: (n) => 'Next quote: ' + n,
+      services: 'Estimated hours per service', servicesDesc: 'When a scan finds an issue, the quote gets a line with these hours.',
+      colService: 'Service', colHours: 'Hours', colPrice: 'Price', colRate: 'Rate', colAmount: 'Amount', colDescription: 'Description',
+      texts: 'Default texts', textsDesc: 'Filled in on every new quote. You can still change them per quote.',
+      sIntro: 'Introduction', sTerms: 'Terms',
+      saveSettings: 'Save settings', unsaved: 'Unsaved changes', toastSettingsSaved: 'Settings saved',
+      defaultIntro: 'Thank you for your interest. After a technical scan of your website we found a number of points that need attention. Below is our proposal to resolve them.',
+      defaultTerms: 'All amounts are in euros. Hours are estimates; extra work is only carried out after your approval. Payment within 14 days of the invoice date.',
+      quote: 'Quote', createQuote: 'Create quote', openQuote: 'Open quote', quoteLines: 'Line items', addLine: 'Add line', newLine: 'New service',
+      detailPh: 'Details (optional)', quoteDetails: 'Quote details', quoteNumber: 'Quote number', quoteDate: 'Date', validUntil: 'Valid until',
+      quoteTexts: 'Texts on the quote', recipient: 'Client',
+      subtotal: 'Subtotal', vat: (r) => 'VAT ' + r + '%', total: 'Total',
+      saving: 'Saving…', saved: 'Saved',
+      rebuild: 'Rebuild from scan', rebuildTitle: 'Rebuild quote?', rebuildText: 'All line items are replaced with new lines from the latest scan and your current settings.', rebuildOk: 'Rebuild',
+      deleteQuote: 'Delete quote', deleteQuoteTitle: 'Delete quote?', deleteQuoteText: 'This quote will be removed. The lead and its scan are kept.',
+      toastQuoteDeleted: 'Quote deleted', toastQuoteFail: 'Could not create the quote',
+      noLines: 'No line items yet. Add one, or scan the site first.',
+      setupBusiness: 'Your business details are still empty, so they won’t appear on the quote.', goSettings: 'Open settings',
+      quoteFor: (d) => 'Quote for ' + d,
     },
     nl: {
       workspace: 'Werkruimte', allLeads: 'Alle leads', needsAttention: 'Aandacht nodig',
@@ -642,6 +726,31 @@
       toastScanAllStart: (n) => n + ' lead(s) scannen…',
       toastNoServer: 'Scanner server niet actief — start met: node server.js',
       toastCrit: (n) => n + ' kritieke probleem/problemen gevonden', toastWarn: (n) => n + ' waarschuwing(en) gevonden', toastClean: 'Scan voltooid — geen grote problemen',
+      general: 'Algemeen', settings: 'Instellingen', settingsSub: 'Je bedrijfsgegevens, tarieven en standaarden voor offertes.',
+      business: 'Bedrijfsgegevens', businessDesc: 'Komen boven- en onderaan je offertes te staan.',
+      sCompanyName: 'Bedrijfsnaam', sContactName: 'Contactpersoon', sEmail: 'E-mail', sPhone: 'Telefoon', sAddress: 'Adres', sWebsite: 'Website',
+      sKvk: 'KvK-nummer', sVatNumber: 'Btw-nummer', sIban: 'IBAN',
+      rates: 'Tarieven & offertes', ratesDesc: 'Worden gebruikt als je een nieuwe offerte maakt.',
+      sHourlyRate: 'Uurtarief', sVatRate: 'Btw', sValidDays: 'Geldig', days: 'dagen',
+      sQuotePrefix: 'Voorvoegsel offertenummer', sNextNumber: 'Volgend offertenummer', sNumberPreview: (n) => 'Volgende offerte: ' + n,
+      services: 'Geschatte uren per dienst', servicesDesc: 'Als een scan een probleem vindt, krijgt de offerte een regel met deze uren.',
+      colService: 'Dienst', colHours: 'Uren', colPrice: 'Prijs', colRate: 'Tarief', colAmount: 'Bedrag', colDescription: 'Omschrijving',
+      texts: 'Standaardteksten', textsDesc: 'Worden op elke nieuwe offerte ingevuld. Per offerte nog aan te passen.',
+      sIntro: 'Inleiding', sTerms: 'Voorwaarden',
+      saveSettings: 'Instellingen opslaan', unsaved: 'Niet-opgeslagen wijzigingen', toastSettingsSaved: 'Instellingen opgeslagen',
+      defaultIntro: 'Bedankt voor uw interesse. Na een technische scan van uw website hebben wij een aantal punten gevonden die aandacht nodig hebben. Hieronder vindt u ons voorstel om deze op te lossen.',
+      defaultTerms: 'Alle bedragen zijn in euro’s. De uren zijn een inschatting; meerwerk wordt alleen uitgevoerd na uw akkoord. Betaling binnen 14 dagen na factuurdatum.',
+      quote: 'Offerte', createQuote: 'Offerte maken', openQuote: 'Offerte openen', quoteLines: 'Offerteregels', addLine: 'Regel toevoegen', newLine: 'Nieuwe dienst',
+      detailPh: 'Toelichting (optioneel)', quoteDetails: 'Offertegegevens', quoteNumber: 'Offertenummer', quoteDate: 'Datum', validUntil: 'Geldig tot',
+      quoteTexts: 'Teksten op de offerte', recipient: 'Klant',
+      subtotal: 'Subtotaal', vat: (r) => 'Btw ' + r + '%', total: 'Totaal',
+      saving: 'Opslaan…', saved: 'Opgeslagen',
+      rebuild: 'Opnieuw opbouwen uit scan', rebuildTitle: 'Offerte opnieuw opbouwen?', rebuildText: 'Alle regels worden vervangen door nieuwe regels uit de laatste scan en je huidige instellingen.', rebuildOk: 'Opnieuw opbouwen',
+      deleteQuote: 'Offerte verwijderen', deleteQuoteTitle: 'Offerte verwijderen?', deleteQuoteText: 'Deze offerte wordt verwijderd. De lead en de scan blijven bewaard.',
+      toastQuoteDeleted: 'Offerte verwijderd', toastQuoteFail: 'Offerte kon niet worden aangemaakt',
+      noLines: 'Nog geen regels. Voeg er een toe of scan eerst de site.',
+      setupBusiness: 'Je bedrijfsgegevens zijn nog leeg en komen dus niet op de offerte.', goSettings: 'Naar instellingen',
+      quoteFor: (d) => 'Offerte voor ' + d,
     },
   };
 
@@ -653,6 +762,7 @@
   function setLang(l) {
     lang = l;
     try { localStorage.setItem('lang', l); } catch {}
+    if (!settingsDirty) settingsBuilt = false;
     applyTranslations();
     render();
   }
@@ -711,7 +821,15 @@
   let currentId = null;
   let sevFilter = 'all';
   let editingId = null;
-  let pendingDeleteId = null;
+  let confirmFn = null;
+  let settingsBuilt = false;
+  let settingsDirty = false;
+  let quoteDraft = null;
+  let quoteLeadId = null;
+  let quoteCreating = false;
+  let quoteSaveTimer = null;
+  let quotePending = null;
+  let quoteSaveState = 'saved';
   let scanAllRunning = false;
   const scanningIds = new Set(); // kept in memory so an interrupted scan never gets stuck
 
@@ -775,18 +893,28 @@
 
   // ── Router ──
   function route() {
+    flushQuoteSave();
     const h = location.hash || '#/';
-    const m = h.match(/^#\/lead\/([^/]+)$/);
     const prevView = view, prevId = currentId;
-    if (m) {
+    let m;
+    if ((m = h.match(/^#\/lead\/([^/]+)\/quote$/))) {
+      view = 'quote';
+      currentId = decodeURIComponent(m[1]);
+    } else if ((m = h.match(/^#\/lead\/([^/]+)$/))) {
       view = 'detail';
       currentId = decodeURIComponent(m[1]);
       if (currentId !== prevId) sevFilter = 'all';
+    } else if (h === '#/settings') {
+      view = 'settings';
+      currentId = null;
+      if (prevView !== 'settings') settingsBuilt = false;
     } else {
       view = 'list';
       currentId = null;
       attentionOnly = h === '#/attention';
     }
+    // Leaving settings with unsaved edits: save them instead of losing them
+    if (prevView === 'settings' && view !== 'settings' && settingsDirty) saveSettings();
     render();
     if (prevView !== view || prevId !== currentId) window.scrollTo(0, 0);
   }
@@ -795,26 +923,37 @@
 
   // ── Render ──
   function render() {
-    $('view-list').hidden = view !== 'list';
-    $('view-detail').hidden = view !== 'detail';
+    for (const v of ['list', 'detail', 'settings', 'quote']) $('view-' + v).hidden = view !== v;
 
     $('nav-count-all').textContent = leads.length;
     $('nav-count-attention').textContent = leads.filter(hasIssues).length;
     $('nav-all').classList.toggle('active', view === 'list' && !attentionOnly);
     $('nav-attention').classList.toggle('active', view === 'list' && attentionOnly);
+    $('nav-settings').classList.toggle('active', view === 'settings');
 
     renderCrumbs();
-    if (view === 'list') renderList(); else renderDetail();
+    if (view === 'list') renderList();
+    else if (view === 'detail') renderDetail();
+    else if (view === 'settings') renderSettings();
+    else renderQuote();
   }
 
   function renderCrumbs() {
-    const root = attentionOnly && view === 'list' ? t('needsAttention') : t('allLeads');
+    const sep = '<i class="fa-solid fa-chevron-right sep"></i>';
     if (view === 'list') {
-      $('crumbs').innerHTML = '<span class="current">' + esc(root) + '</span>';
-    } else {
-      const l = leads.find(x => x.id === currentId);
-      $('crumbs').innerHTML = '<a href="#/">' + esc(t('allLeads')) + '</a><i class="fa-solid fa-chevron-right sep"></i><span class="current">' + esc(l ? domain(l.url) : '') + '</span>';
+      $('crumbs').innerHTML = '<span class="current">' + esc(attentionOnly ? t('needsAttention') : t('allLeads')) + '</span>';
+      return;
     }
+    if (view === 'settings') {
+      $('crumbs').innerHTML = '<span class="current">' + esc(t('settings')) + '</span>';
+      return;
+    }
+    const l = currentLead();
+    const d = esc(l ? domain(l.url) : '');
+    let html = '<a href="#/">' + esc(t('allLeads')) + '</a>' + sep;
+    if (view === 'quote') html += '<a href="#/lead/' + encodeURIComponent(currentId) + '">' + d + '</a>' + sep + '<span class="current">' + esc(t('quote')) + '</span>';
+    else html += '<span class="current">' + d + '</span>';
+    $('crumbs').innerHTML = html;
   }
 
   function renderStats() {
@@ -976,8 +1115,10 @@
         '<button class="btn btn-secondary" onclick="openEdit(\'' + id + '\')"><i class="fa-solid fa-pen"></i>' + esc(t('edit')) + '</button>' +
         (st === 'done' ? '<button class="btn btn-secondary" onclick="copyReport()"><i class="fa-regular fa-copy"></i>' + esc(t('copyReport')) + '</button>' +
                          '<button class="btn btn-secondary" onclick="downloadPdf()"><i class="fa-solid fa-file-pdf"></i>' + esc(t('downloadPdf')) + '</button>' : '') +
-        '<button class="btn btn-primary" onclick="scanLead(\'' + id + '\')"' + (busy ? ' disabled' : '') + '>' +
+        '<button class="btn ' + (st === 'done' ? 'btn-secondary' : 'btn-primary') + '" onclick="scanLead(\'' + id + '\')"' + (busy ? ' disabled' : '') + '>' +
           (busy ? '<span class="spin"></span>' + esc(t('scanning')) : '<i class="fa-solid fa-rotate"></i>' + esc(st === 'none' ? t('scanNow') : t('rescan'))) + '</button>' +
+        '<a class="btn ' + (st === 'done' ? 'btn-primary' : 'btn-secondary') + '" href="#/lead/' + encodeURIComponent(l.id) + '/quote"><i class="fa-solid fa-file-invoice"></i>' +
+          esc(l.quote ? t('openQuote') : t('createQuote')) + '</a>' +
       '</div></div>';
 
     // Main column
@@ -1039,7 +1180,7 @@
     const statusOpts = ['new', 'contacted', 'qualified', 'rejected'].map(s =>
       '<option value="' + s + '"' + (l.status === s ? ' selected' : '') + '>' + esc(t('status' + s[0].toUpperCase() + s.slice(1))) + '</option>').join('');
 
-    let side = '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +
+    let side = quoteCard(l) + '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +
       kvRow(t('status'), '<select onchange="setStatus(\'' + id + '\', this.value)">' + statusOpts + '</select>') +
       kvRow(t('company'), l.name ? esc(l.name) : '<span class="dash">—</span>') +
       kvRow(t('added'), esc(fmtDate(l.created))) +
@@ -1121,27 +1262,37 @@
   $('quick-name').addEventListener('keydown', e => { if (e.key === 'Enter') quickAdd(); });
 
   // ── Delete ──
-  function askDelete(id) {
-    const l = leads.find(x => x.id === id);
-    if (!l) return;
-    pendingDeleteId = id;
-    $('confirm-text').textContent = t('deleteText', domain(l.url));
+  function openConfirm(title, text, okLabel, danger, fn) {
+    $('confirm-title').textContent = title;
+    $('confirm-text').textContent = text;
+    const ok = $('confirm-ok');
+    ok.textContent = okLabel;
+    ok.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+    confirmFn = fn;
     $('confirm').classList.add('open');
   }
 
   function closeConfirm() {
     $('confirm').classList.remove('open');
-    pendingDeleteId = null;
+    confirmFn = null;
   }
 
-  async function confirmDelete() {
-    const id = pendingDeleteId;
+  async function runConfirm() {
+    const fn = confirmFn;
     closeConfirm();
-    if (!id) return;
-    await apiDelete(id);
-    if (view === 'detail' && currentId === id) location.hash = '#/';
-    await apiLoad();
-    toast(t('toastRemoved'), '');
+    if (fn) await fn();
+  }
+
+  function askDelete(id) {
+    const l = leads.find(x => x.id === id);
+    if (!l) return;
+    openConfirm(t('deleteTitle'), t('deleteText', domain(l.url)), t('delete'), true, async () => {
+      await apiDelete(id);
+      if (quoteLeadId === id) { quoteDraft = null; quoteLeadId = null; }
+      if ((view === 'detail' || view === 'quote') && currentId === id) location.hash = '#/';
+      await apiLoad();
+      toast(t('toastRemoved'), '');
+    });
   }
 
   // ── Add / edit modal ──
@@ -1544,11 +1695,607 @@
 </html>`;
   }
 
+  // ── Settings ──
+  const SERVICE_DEFS = [
+    { tech: 'SSL/HTTPS',        hours: 1.5, nl: 'SSL-certificaat installeren en HTTPS-migratie',  en: 'SSL certificate installation and HTTPS migration' },
+    { tech: 'PHP',              hours: 3,   nl: 'PHP-upgrade naar een ondersteunde versie',       en: 'PHP upgrade to a supported version' },
+    { tech: 'WordPress',        hours: 4,   nl: 'WordPress- en plugin-updates, beveiliging',      en: 'WordPress core & plugin updates and hardening' },
+    { tech: 'Drupal',           hours: 12,  nl: 'Drupal-upgrade en onderhoud',                    en: 'Drupal upgrade and maintenance' },
+    { tech: 'Joomla',           hours: 12,  nl: 'Joomla-upgrade of migratie',                     en: 'Joomla upgrade or migration' },
+    { tech: 'jQuery',           hours: 4,   nl: 'jQuery-upgrade en frontend-modernisering',       en: 'jQuery upgrade and frontend modernisation' },
+    { tech: 'Bootstrap',        hours: 8,   nl: 'Frontend-update naar Bootstrap 5',               en: 'Frontend update to Bootstrap 5' },
+    { tech: 'Apache',           hours: 2,   nl: 'Webserver (Apache) upgraden en beveiligen',      en: 'Web server (Apache) upgrade and hardening' },
+    { tech: 'Nginx',            hours: 2,   nl: 'Webserver (Nginx) upgraden en beveiligen',       en: 'Web server (Nginx) upgrade and hardening' },
+    { tech: 'Microsoft IIS',    hours: 4,   nl: 'Webserver (IIS) upgraden of migreren',           en: 'Web server (IIS) upgrade or migration' },
+    { tech: 'ASP.NET',          hours: 16,  nl: 'Upgrade naar een moderne .NET-versie',           en: 'Upgrade to a modern .NET version' },
+    { tech: 'Security Headers', hours: 1.5, nl: 'Beveiligingsheaders configureren',               en: 'Security header configuration' },
+  ];
+
+  const DEFAULT_SETTINGS = {
+    companyName: '', contactName: '', email: '', phone: '', address: '', website: '',
+    kvk: '', vatNumber: '', iban: '',
+    hourlyRate: 75, vatRate: 21, validDays: 30, quotePrefix: 'OFF-', nextQuoteNumber: 1,
+    introText: '', termsText: '',
+    hours: {},
+  };
+
+  let settings = { ...DEFAULT_SETTINGS, hours: {} };
+
+  async function apiLoadSettings() {
+    try {
+      const s = await (await fetch('/api/settings')).json();
+      settings = { ...DEFAULT_SETTINGS, ...s, hours: { ...(s.hours || {}) } };
+      if (!settingsDirty) settingsBuilt = false;
+    } catch {}
+  }
+
+  async function apiSaveSettings() {
+    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+  }
+
+  function hoursFor(tech) {
+    const h = settings.hours[tech];
+    if (h !== undefined && h !== null && h !== '') return Number(h) || 0;
+    const def = SERVICE_DEFS.find(d => d.tech === tech);
+    return def ? def.hours : 1;
+  }
+
+  function serviceName(def) { return def[lang] || def.en; }
+
+  const money = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n || 0);
+
+  function formatQuoteNumber(prefix, n) {
+    return (prefix || '') + new Date().getFullYear() + '-' + String(n).padStart(3, '0');
+  }
+
+  function renderSettings() {
+    if (settingsBuilt) return;
+    settingsBuilt = true;
+    settingsDirty = false;
+    const s = settings;
+
+    const field = (key, label, o = {}) => {
+      const common = ' id="set-' + key + '" data-setting="' + key + '" placeholder="' + esc(o.ph || '') + '" oninput="markDirty()"';
+      let ctl = o.textarea
+        ? '<textarea' + common + ' rows="' + (o.rows || 3) + '">' + esc(s[key]) + '</textarea>'
+        : '<input' + common + ' type="' + (o.num ? 'number' : (o.type || 'text')) + '"' +
+          (o.num ? ' data-num min="0" step="' + (o.step || 1) + '"' : '') + ' value="' + esc(s[key]) + '">';
+      if (o.pre) ctl = '<div class="input-affix"><span>' + o.pre + '</span>' + ctl + '</div>';
+      if (o.suf) ctl = '<div class="input-affix suffix">' + ctl + '<span>' + esc(o.suf) + '</span></div>';
+      return '<div class="field' + (o.full ? ' full' : '') + '"><label for="set-' + key + '">' + esc(label) + '</label>' + ctl +
+        (o.hint !== undefined ? '<div class="hint" id="hint-' + key + '">' + esc(o.hint) + '</div>' : '') + '</div>';
+    };
+
+    const section = (title, desc, body, flush) =>
+      '<div class="card"><div class="card-head"><div><div class="card-title">' + esc(title) + '</div><div class="section-desc">' + esc(desc) + '</div></div></div>' +
+      (flush ? body : '<div class="card-body">' + body + '</div>') + '</div>';
+
+    const saveBtn = '<button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-check"></i>' + esc(t('saveSettings')) + '</button>';
+
+    const svcRows = SERVICE_DEFS.map((d, i) =>
+      '<tr><td><div style="font-weight:500">' + esc(serviceName(d)) + '</div><div class="site-sub">' + esc(d.tech) + '</div></td>' +
+      '<td style="text-align:right"><input class="num-input" type="number" min="0" step="0.25" data-hidx="' + i + '" value="' + esc(hoursFor(d.tech)) + '" oninput="markDirty()"></td>' +
+      '<td class="date" style="text-align:right;color:var(--text-2)" id="price-' + i + '"></td></tr>').join('');
+
+    $('view-settings').innerHTML =
+      '<div class="narrow fade-in">' +
+      '<div class="page-head"><div><h1 class="page-title">' + esc(t('settings')) + '</h1><p class="page-sub">' + esc(t('settingsSub')) + '</p></div>' +
+        '<div class="head-actions" style="align-items:center"><span class="dirty" id="settings-dirty" hidden>' + esc(t('unsaved')) + '</span>' + saveBtn + '</div></div>' +
+      '<div class="stack">' +
+        section(t('business'), t('businessDesc'), '<div class="form-grid">' +
+          field('companyName', t('sCompanyName'), { ph: 'Jouw Webbureau' }) +
+          field('contactName', t('sContactName')) +
+          field('email', t('sEmail'), { type: 'email', ph: 'info@jouwbedrijf.nl' }) +
+          field('phone', t('sPhone'), { type: 'tel' }) +
+          field('address', t('sAddress'), { textarea: true, rows: 2, full: true, ph: 'Straat 1\n1234 AB Plaats' }) +
+          field('website', t('sWebsite'), { ph: 'jouwbedrijf.nl' }) +
+          field('kvk', t('sKvk')) +
+          field('vatNumber', t('sVatNumber'), { ph: 'NL000000000B01' }) +
+          field('iban', t('sIban'), { ph: 'NL00 BANK 0000 0000 00' }) +
+        '</div>') +
+        section(t('rates'), t('ratesDesc'), '<div class="form-grid">' +
+          field('hourlyRate', t('sHourlyRate'), { num: true, step: 1, pre: '€' }) +
+          field('vatRate', t('sVatRate'), { num: true, step: 1, suf: '%' }) +
+          field('validDays', t('sValidDays'), { num: true, step: 1, suf: t('days') }) +
+          field('quotePrefix', t('sQuotePrefix'), { ph: 'OFF-' }) +
+          field('nextQuoteNumber', t('sNextNumber'), { num: true, step: 1, hint: '' }) +
+        '</div>') +
+        section(t('services'), t('servicesDesc'),
+          '<div class="table-scroll"><table class="svc-table" style="min-width:480px"><thead><tr><th>' + esc(t('colService')) + '</th><th style="text-align:right">' + esc(t('colHours')) +
+          '</th><th style="text-align:right">' + esc(t('colPrice')) + '</th></tr></thead><tbody>' + svcRows + '</tbody></table></div>', true) +
+        section(t('texts'), t('textsDesc'),
+          '<div class="form-grid">' +
+          field('introText', t('sIntro'), { textarea: true, rows: 4, full: true, ph: t('defaultIntro') }) +
+          field('termsText', t('sTerms'), { textarea: true, rows: 4, full: true, ph: t('defaultTerms') }) +
+          '</div>') +
+        '<div style="display:flex;justify-content:flex-end">' + saveBtn + '</div>' +
+      '</div></div>';
+
+    updateSettingsPreview();
+  }
+
+  function markDirty() {
+    settingsDirty = true;
+    const d = $('settings-dirty');
+    if (d) d.hidden = false;
+    updateSettingsPreview();
+  }
+
+  function updateSettingsPreview() {
+    const rateEl = $('set-hourlyRate');
+    if (!rateEl) return;
+    const rate = parseFloat(rateEl.value) || 0;
+    document.querySelectorAll('[data-hidx]').forEach(el => {
+      const c = $('price-' + el.dataset.hidx);
+      if (c) c.textContent = money((parseFloat(el.value) || 0) * rate);
+    });
+    const n = Math.max(1, parseInt($('set-nextQuoteNumber').value, 10) || 1);
+    $('hint-nextQuoteNumber').textContent = t('sNumberPreview', formatQuoteNumber($('set-quotePrefix').value.trim(), n));
+  }
+
+  async function saveSettings() {
+    document.querySelectorAll('[data-setting]').forEach(el => {
+      settings[el.dataset.setting] = el.hasAttribute('data-num') ? (parseFloat(el.value) || 0) : el.value.trim();
+    });
+    settings.nextQuoteNumber = Math.max(1, Math.round(settings.nextQuoteNumber || 1));
+    document.querySelectorAll('[data-hidx]').forEach(el => {
+      settings.hours[SERVICE_DEFS[el.dataset.hidx].tech] = parseFloat(el.value) || 0;
+    });
+    settingsDirty = false;
+    const d = $('settings-dirty');
+    if (d) d.hidden = true;
+    await apiSaveSettings();
+    toast(t('toastSettingsSaved'), 'success');
+  }
+
+  // ── Quotes ──
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function parseISODate(iso) {
+    const [y, m, d] = String(iso || '').split('-').map(Number);
+    return y && m && d ? new Date(y, m - 1, d) : new Date();
+  }
+
+  function addDays(iso, n) {
+    const d = parseISODate(iso);
+    d.setDate(d.getDate() + (Number(n) || 0));
+    return d;
+  }
+
+  function fmtLong(d) {
+    return d.toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function quoteTotals(q) {
+    const sub = (q.items || []).reduce((a, i) => a + (i.include ? (Number(i.hours) || 0) * (Number(i.rate) || 0) : 0), 0);
+    const vat = sub * (Number(q.vatRate) || 0) / 100;
+    return { sub, vat, total: sub + vat };
+  }
+
+  // One line per technology with a problem (findings are sorted most severe first)
+  function buildItems(lead) {
+    const items = [];
+    const seen = new Set();
+    if (scanState(lead) !== 'done') return items;
+    lead.scanResult.findings.forEach(f => {
+      if (f.severity === 'info' || seen.has(f.tech)) return;
+      const def = SERVICE_DEFS.find(d => d.tech === f.tech);
+      if (!def) return;
+      seen.add(f.tech);
+      items.push({
+        id: uid(),
+        description: serviceName(def),
+        detail: findingText(f, lang).title,
+        hours: hoursFor(f.tech),
+        rate: Number(settings.hourlyRate) || 0,
+        include: true,
+      });
+    });
+    return items;
+  }
+
+  async function apiSaveQuote(leadId, q) {
+    await fetch('/api/quotes/' + encodeURIComponent(leadId), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(q) });
+  }
+
+  async function apiDeleteQuote(leadId) {
+    await fetch('/api/quotes/' + encodeURIComponent(leadId), { method: 'DELETE' });
+  }
+
+  async function createQuote(lead) {
+    const n = Math.max(1, settings.nextQuoteNumber || 1);
+    const q = {
+      number: formatQuoteNumber(settings.quotePrefix, n),
+      date: todayISO(),
+      validDays: Number(settings.validDays) || 30,
+      vatRate: Number(settings.vatRate) || 0,
+      intro: settings.introText || t('defaultIntro'),
+      terms: settings.termsText || t('defaultTerms'),
+      items: buildItems(lead),
+      created: Date.now(),
+    };
+    settings.nextQuoteNumber = n + 1;
+    await apiSaveSettings();
+    await apiSaveQuote(lead.id, q);
+    lead.quote = q;
+    if (!settingsDirty) settingsBuilt = false;
+  }
+
+  function setSaveState(s) {
+    quoteSaveState = s;
+    const el = $('q-save-state');
+    if (el) el.innerHTML = saveStateHtml();
+  }
+
+  function saveStateHtml() {
+    return quoteSaveState === 'saving'
+      ? '<span class="spin"></span>' + esc(t('saving'))
+      : '<i class="fa-solid fa-check"></i>' + esc(t('saved'));
+  }
+
+  function scheduleQuoteSave() {
+    const leadId = quoteLeadId, q = quoteDraft;
+    setSaveState('saving');
+    clearTimeout(quoteSaveTimer);
+    quotePending = async () => {
+      quotePending = null;
+      await apiSaveQuote(leadId, q);
+      const l = leads.find(x => x.id === leadId);
+      if (l) l.quote = JSON.parse(JSON.stringify(q));
+      setSaveState('saved');
+    };
+    quoteSaveTimer = setTimeout(() => quotePending && quotePending(), 600);
+  }
+
+  async function flushQuoteSave() {
+    clearTimeout(quoteSaveTimer);
+    if (quotePending) await quotePending();
+  }
+
+  // Keep focus/cursor when the quote page re-renders
+  function captureFocus() {
+    const a = document.activeElement;
+    if (!a || !a.id) return () => {};
+    const id = a.id;
+    let s = null, e = null;
+    try { s = a.selectionStart; e = a.selectionEnd; } catch {}
+    return () => {
+      const n = $(id);
+      if (!n) return;
+      n.focus();
+      try { if (s !== null) n.setSelectionRange(s, e); } catch {}
+    };
+  }
+
+  function quoteCard(l) {
+    if (!l.quote) return '';
+    const tot = quoteTotals(l.quote);
+    return '<a class="card quote-card" href="#/lead/' + encodeURIComponent(l.id) + '/quote"><div class="card-body" style="display:flex;align-items:center;gap:12px">' +
+      '<div class="stat-icon tone-accent" style="width:36px;height:36px;font-size:14px"><i class="fa-solid fa-file-invoice"></i></div>' +
+      '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13.5px">' + esc(t('quote')) + ' ' + esc(l.quote.number) + '</div>' +
+      '<div class="site-sub">' + esc(fmtLong(parseISODate(l.quote.date))) + '</div></div>' +
+      '<div style="font-weight:600;font-variant-numeric:tabular-nums">' + money(tot.total) + '</div></div></a>';
+  }
+
+  function qRow(i) {
+    const id = i.id;
+    const call = (key, val) => 'qItem(\'' + id + '\',\'' + key + '\',' + val + ')';
+    return '<tr data-qid="' + id + '"' + (i.include ? '' : ' class="off"') + '>' +
+      '<td><input type="checkbox" id="q-inc-' + id + '"' + (i.include ? ' checked' : '') + ' onchange="' + call('include', 'this.checked') + '"></td>' +
+      '<td style="min-width:240px"><input class="cell" id="q-desc-' + id + '" value="' + esc(i.description) + '" oninput="' + call('description', 'this.value') + '">' +
+        '<input class="cell sub" id="q-det-' + id + '" value="' + esc(i.detail) + '" placeholder="' + esc(t('detailPh')) + '" oninput="' + call('detail', 'this.value') + '"></td>' +
+      '<td style="text-align:right"><input class="cell num" type="number" min="0" step="0.25" id="q-h-' + id + '" value="' + esc(i.hours) + '" oninput="' + call('hours', 'this.value') + '"></td>' +
+      '<td style="text-align:right"><div class="input-affix" style="margin-left:auto"><span>€</span><input class="cell num" type="number" min="0" step="1" id="q-r-' + id + '" value="' + esc(i.rate) + '" oninput="' + call('rate', 'this.value') + '"></div></td>' +
+      '<td class="amt" id="amt-' + id + '">' + money((Number(i.hours) || 0) * (Number(i.rate) || 0)) + '</td>' +
+      '<td><button class="icon-btn danger" title="' + esc(t('delete')) + '" onclick="qRemove(\'' + id + '\')"><i class="fa-solid fa-xmark"></i></button></td></tr>';
+  }
+
+  function renderQuote() {
+    const el = $('view-quote');
+    const l = currentLead();
+
+    if (!l) {
+      el.innerHTML = loaded
+        ? '<div class="card empty fade-in"><div class="empty-icon"><i class="fa-solid fa-ghost"></i></div><h3>' + esc(t('notFound')) + '</h3><p>' + esc(t('notFoundHint')) + '</p>' +
+          '<a class="btn btn-secondary" href="#/"><i class="fa-solid fa-arrow-left"></i>' + esc(t('backToLeads')) + '</a></div>'
+        : '';
+      return;
+    }
+
+    if (!quoteDraft || quoteLeadId !== l.id) {
+      if (l.quote) {
+        quoteDraft = JSON.parse(JSON.stringify(l.quote));
+        quoteLeadId = l.id;
+      } else {
+        if (loaded && !quoteCreating) {
+          quoteCreating = true;
+          createQuote(l).then(
+            () => { quoteCreating = false; render(); },
+            () => { quoteCreating = false; toast(t('toastQuoteFail'), 'error'); }
+          );
+        }
+        el.innerHTML = '';
+        return;
+      }
+    }
+
+    const q = quoteDraft;
+    const tot = quoteTotals(q);
+    const restore = captureFocus();
+    const qf = (label, ctl) => '<div class="field"><label>' + esc(label) + '</label>' + ctl + '</div>';
+
+    let html = '<div class="hero fade-in"><div class="hero-left">' + favicon(l.url, true) + '<div style="min-width:0">' +
+      '<h1 class="hero-title">' + esc(t('quote')) + ' <span style="color:var(--text-2);font-weight:500" id="q-num-title">' + esc(q.number) + '</span></h1>' +
+      '<div class="hero-meta"><span><i class="fa-solid fa-building"></i>' + esc(l.name || domain(l.url)) + '</span>' +
+      '<a href="' + esc(l.url) + '" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>' + esc(domain(l.url)) + '</a></div></div></div>' +
+      '<div class="head-actions" style="align-items:center">' +
+        '<span class="save-state" id="q-save-state">' + saveStateHtml() + '</span>' +
+        '<button class="icon-btn danger" title="' + esc(t('deleteQuote')) + '" onclick="askDeleteQuote()"><i class="fa-solid fa-trash-can"></i></button>' +
+        (scanState(l) === 'done' ? '<button class="btn btn-secondary" onclick="askRebuildQuote()"><i class="fa-solid fa-wand-magic-sparkles"></i>' + esc(t('rebuild')) + '</button>' : '') +
+        '<button class="btn btn-primary" onclick="downloadQuotePdf()"><i class="fa-solid fa-file-pdf"></i>' + esc(t('downloadPdf')) + '</button>' +
+      '</div></div>';
+
+    if (!settings.companyName) {
+      html += '<div class="alert info"><i class="fa-solid fa-circle-info"></i><div style="flex:1">' + esc(t('setupBusiness')) + '</div>' +
+        '<a class="btn btn-secondary btn-sm" href="#/settings">' + esc(t('goSettings')) + '</a></div>';
+    }
+
+    const main = '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('quoteLines')) + ' <span class="n">' + q.items.length + '</span></div></div>' +
+      '<div class="table-scroll"><table class="qtable"><thead><tr><th></th><th>' + esc(t('colDescription')) + '</th><th style="text-align:right">' + esc(t('colHours')) +
+      '</th><th style="text-align:right">' + esc(t('colRate')) + '</th><th style="text-align:right">' + esc(t('colAmount')) + '</th><th></th></tr></thead><tbody>' +
+      q.items.map(qRow).join('') + '</tbody></table></div>' +
+      (q.items.length ? '' : '<div class="card-body muted-note">' + esc(t('noLines')) + '</div>') +
+      '<div class="q-foot"><button class="btn btn-secondary btn-sm" onclick="qAdd()"><i class="fa-solid fa-plus"></i>' + esc(t('addLine')) + '</button>' +
+        '<div class="totals">' +
+          '<div class="tr"><span>' + esc(t('subtotal')) + '</span><span id="q-sub">' + money(tot.sub) + '</span></div>' +
+          '<div class="tr"><span id="q-vat-label">' + esc(t('vat', q.vatRate)) + '</span><span id="q-vat">' + money(tot.vat) + '</span></div>' +
+          '<div class="tr grand"><span>' + esc(t('total')) + '</span><span id="q-total">' + money(tot.total) + '</span></div>' +
+        '</div></div></div>';
+
+    const side =
+      '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('quoteDetails')) + '</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px">' +
+        qf(t('quoteNumber'), '<input id="qf-number" value="' + esc(q.number) + '" oninput="qField(\'number\', this.value)">') +
+        '<div class="form-grid">' +
+          qf(t('quoteDate'), '<input type="date" id="qf-date" value="' + esc(q.date) + '" oninput="qField(\'date\', this.value)">') +
+          qf(t('sValidDays'), '<div class="input-affix suffix"><input type="number" min="0" id="qf-valid-days" value="' + esc(q.validDays) + '" oninput="qField(\'validDays\', this.value)"><span>' + esc(t('days')) + '</span></div>') +
+        '</div>' +
+        qf(t('sVatRate'), '<div class="input-affix suffix"><input type="number" min="0" step="1" id="qf-vat" value="' + esc(q.vatRate) + '" oninput="qField(\'vatRate\', this.value)"><span>%</span></div>') +
+        '<div class="hint" id="qf-valid">' + esc(t('validUntil')) + ': ' + esc(fmtLong(addDays(q.date, q.validDays))) + '</div>' +
+      '</div></div>' +
+      '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('quoteTexts')) + '</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px">' +
+        qf(t('sIntro'), '<textarea id="qf-intro" rows="5" oninput="qField(\'intro\', this.value)">' + esc(q.intro) + '</textarea>') +
+        qf(t('sTerms'), '<textarea id="qf-terms" rows="4" oninput="qField(\'terms\', this.value)">' + esc(q.terms) + '</textarea>') +
+      '</div></div>';
+
+    el.innerHTML = html + '<div class="detail-grid"><div class="stack">' + main + '</div><div class="stack">' + side + '</div></div>';
+    restore();
+  }
+
+  function updateQuoteTotals() {
+    const q = quoteDraft;
+    if (!q) return;
+    q.items.forEach(i => {
+      const c = $('amt-' + i.id);
+      if (c) c.textContent = money((Number(i.hours) || 0) * (Number(i.rate) || 0));
+    });
+    const tot = quoteTotals(q);
+    if ($('q-sub')) {
+      $('q-sub').textContent = money(tot.sub);
+      $('q-vat').textContent = money(tot.vat);
+      $('q-total').textContent = money(tot.total);
+    }
+  }
+
+  function qItem(id, key, val) {
+    const it = quoteDraft && quoteDraft.items.find(x => x.id === id);
+    if (!it) return;
+    it[key] = key === 'hours' || key === 'rate' ? (parseFloat(val) || 0) : val;
+    if (key === 'include') {
+      const row = document.querySelector('tr[data-qid="' + id + '"]');
+      if (row) row.classList.toggle('off', !val);
+    }
+    updateQuoteTotals();
+    scheduleQuoteSave();
+  }
+
+  function qField(key, val) {
+    if (!quoteDraft) return;
+    quoteDraft[key] = key === 'validDays' || key === 'vatRate' ? (parseFloat(val) || 0) : val;
+    if (key === 'vatRate') $('q-vat-label').textContent = t('vat', quoteDraft.vatRate);
+    if (key === 'number') $('q-num-title').textContent = val;
+    if (key === 'date' || key === 'validDays') $('qf-valid').textContent = t('validUntil') + ': ' + fmtLong(addDays(quoteDraft.date, quoteDraft.validDays));
+    updateQuoteTotals();
+    scheduleQuoteSave();
+  }
+
+  function qAdd() {
+    const it = { id: uid(), description: t('newLine'), detail: '', hours: 1, rate: Number(settings.hourlyRate) || 0, include: true };
+    quoteDraft.items.push(it);
+    renderQuote();
+    scheduleQuoteSave();
+    const d = $('q-desc-' + it.id);
+    if (d) { d.focus(); d.select(); }
+  }
+
+  function qRemove(id) {
+    quoteDraft.items = quoteDraft.items.filter(i => i.id !== id);
+    renderQuote();
+    scheduleQuoteSave();
+  }
+
+  function askRebuildQuote() {
+    const l = currentLead();
+    if (!l || !quoteDraft) return;
+    openConfirm(t('rebuildTitle'), t('rebuildText'), t('rebuildOk'), false, () => {
+      quoteDraft.items = buildItems(l);
+      renderQuote();
+      scheduleQuoteSave();
+    });
+  }
+
+  function askDeleteQuote() {
+    const l = currentLead();
+    if (!l) return;
+    openConfirm(t('deleteQuoteTitle'), t('deleteQuoteText'), t('delete'), true, async () => {
+      clearTimeout(quoteSaveTimer);
+      quotePending = null;
+      await apiDeleteQuote(l.id);
+      l.quote = null;
+      quoteDraft = null;
+      quoteLeadId = null;
+      quoteSaveState = 'saved';
+      location.hash = '#/lead/' + encodeURIComponent(l.id);
+      toast(t('toastQuoteDeleted'), '');
+    });
+  }
+
+  function downloadQuotePdf() {
+    const l = currentLead();
+    if (!l || !quoteDraft) return;
+    const win = window.open('', '_blank'); // open right away so the popup isn't blocked
+    flushQuoteSave();
+    win.document.write(generateQuoteHTML(l, quoteDraft));
+    win.document.close();
+    setTimeout(() => win.print(), 600);
+  }
+
+  function generateQuoteHTML(lead, q) {
+    const nl = lang === 'nl';
+    const s = settings;
+    const loc = nl ? 'nl-NL' : 'en-US';
+    const longDate = (d) => d.toLocaleDateString(loc, { day: 'numeric', month: 'long', year: 'numeric' });
+    const tot = quoteTotals(q);
+    const items = q.items.filter(i => i.include);
+    const nl2br = (x) => esc(x).replace(/\n/g, '<br>');
+    const fmtH = (h) => (Number(h) || 0).toLocaleString(loc, { maximumFractionDigits: 2 });
+    const L = nl
+      ? { quote: 'Offerte', number: 'Offertenummer', date: 'Datum', valid: 'Geldig tot', to: 'Aan', re: 'Betreft', reText: 'Onderhoud en beveiliging van ',
+          desc: 'Omschrijving', hours: 'Uren', rate: 'Tarief', amount: 'Bedrag', sub: 'Subtotaal', vat: 'Btw', total: 'Totaal',
+          terms: 'Voorwaarden', agree: 'Voor akkoord', behalf: 'Namens', name: 'Naam', sign: 'Handtekening', kvk: 'KvK', vatNo: 'Btw-nr.' }
+      : { quote: 'Quote', number: 'Quote number', date: 'Date', valid: 'Valid until', to: 'To', re: 'Re', reText: 'Maintenance and security of ',
+          desc: 'Description', hours: 'Hours', rate: 'Rate', amount: 'Amount', sub: 'Subtotal', vat: 'VAT', total: 'Total',
+          terms: 'Terms', agree: 'Agreed', behalf: 'On behalf of', name: 'Name', sign: 'Signature', kvk: 'CoC', vatNo: 'VAT no.' };
+
+    const contact = [s.email, s.phone, s.website].filter(Boolean).map(esc).join(' &middot; ');
+    const legal = [s.kvk && L.kvk + ' ' + esc(s.kvk), s.vatNumber && L.vatNo + ' ' + esc(s.vatNumber), s.iban && 'IBAN ' + esc(s.iban)].filter(Boolean).join(' &middot; ');
+    const line = '<div style="border-bottom:1px solid #d1d5db;height:28px;margin-bottom:10px"></div>';
+
+    const rows = items.map(i => `
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #eef0f3">
+          <div style="font-weight:600;color:#111827">${esc(i.description)}</div>
+          ${i.detail ? `<div style="font-size:12px;color:#6b7280;margin-top:2px">${esc(i.detail)}</div>` : ''}
+        </td>
+        <td style="padding:12px 0;border-bottom:1px solid #eef0f3;text-align:right">${fmtH(i.hours)}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #eef0f3;text-align:right">${money(i.rate)}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #eef0f3;text-align:right;font-weight:600;color:#111827">${money((Number(i.hours) || 0) * (Number(i.rate) || 0))}</td>
+      </tr>`).join('');
+
+    return `<!DOCTYPE html>
+<html lang="${nl ? 'nl' : 'en'}">
+<head>
+<meta charset="UTF-8"/>
+<title>${L.quote} ${esc(q.number)} — ${esc(lead.name || domain(lead.url))}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #f3f4f6; color: #374151; font-size: 13px; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { max-width: 820px; margin: 32px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.08); padding: 48px 52px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: #9ca3af; font-weight: 600; margin-bottom: 4px; }
+  @media print {
+    body { background: #fff; }
+    .page { max-width: 100%; margin: 0; border-radius: 0; box-shadow: none; padding: 0; }
+    @page { margin: 16mm; size: A4; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:28px;border-bottom:3px solid #4f46e5">
+    <div>
+      <div style="font-size:20px;font-weight:800;color:#111827;letter-spacing:-.3px">${esc(s.companyName) || '&nbsp;'}</div>
+      ${s.address ? `<div style="margin-top:6px;color:#6b7280">${nl2br(s.address)}</div>` : ''}
+      ${contact ? `<div style="margin-top:4px;color:#6b7280">${contact}</div>` : ''}
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:28px;font-weight:800;color:#4f46e5;letter-spacing:-.5px;line-height:1">${L.quote.toUpperCase()}</div>
+      <div style="margin-top:10px;font-size:12px;color:#6b7280">${L.number}: <strong style="color:#111827">${esc(q.number)}</strong></div>
+      <div style="font-size:12px;color:#6b7280">${L.date}: <strong style="color:#111827">${longDate(parseISODate(q.date))}</strong></div>
+      <div style="font-size:12px;color:#6b7280">${L.valid}: <strong style="color:#111827">${longDate(addDays(q.date, q.validDays))}</strong></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:48px;margin:28px 0">
+    <div>
+      <div class="lbl">${L.to}</div>
+      <div style="font-weight:600;color:#111827;font-size:14px">${esc(lead.name || domain(lead.url))}</div>
+      <div style="color:#6b7280">${esc(lead.url)}</div>
+    </div>
+    <div>
+      <div class="lbl">${L.re}</div>
+      <div style="color:#111827">${L.reText}${esc(domain(lead.url))}</div>
+    </div>
+  </div>
+
+  ${q.intro ? `<p style="margin-bottom:28px;color:#374151">${nl2br(q.intro)}</p>` : ''}
+
+  <table>
+    <thead>
+      <tr style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af">
+        <th style="text-align:left;padding-bottom:8px;border-bottom:2px solid #e5e7eb">${L.desc}</th>
+        <th style="text-align:right;padding-bottom:8px;border-bottom:2px solid #e5e7eb;width:70px">${L.hours}</th>
+        <th style="text-align:right;padding-bottom:8px;border-bottom:2px solid #e5e7eb;width:100px">${L.rate}</th>
+        <th style="text-align:right;padding-bottom:8px;border-bottom:2px solid #e5e7eb;width:110px">${L.amount}</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <div style="display:flex;justify-content:flex-end;margin-top:16px;page-break-inside:avoid">
+    <table style="width:280px">
+      <tr><td style="padding:4px 0;color:#6b7280">${L.sub}</td><td style="padding:4px 0;text-align:right">${money(tot.sub)}</td></tr>
+      <tr><td style="padding:4px 0;color:#6b7280">${L.vat} ${esc(q.vatRate)}%</td><td style="padding:4px 0;text-align:right">${money(tot.vat)}</td></tr>
+      <tr><td style="padding:10px 0 0;border-top:2px solid #111827;font-weight:800;color:#111827;font-size:15px">${L.total}</td>
+          <td style="padding:10px 0 0;border-top:2px solid #111827;text-align:right;font-weight:800;color:#4f46e5;font-size:17px">${money(tot.total)}</td></tr>
+    </table>
+  </div>
+
+  ${q.terms ? `
+  <div style="margin-top:36px;page-break-inside:avoid">
+    <div class="lbl">${L.terms}</div>
+    <div style="color:#6b7280;font-size:12px">${nl2br(q.terms)}</div>
+  </div>` : ''}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:40px;page-break-inside:avoid">
+    <div>
+      <div class="lbl">${L.behalf} ${esc(s.companyName)}</div>
+      <div style="margin-top:8px;color:#111827">${esc(s.contactName) || '&nbsp;'}</div>
+      ${line}
+    </div>
+    <div>
+      <div class="lbl">${L.agree} ${esc(lead.name || domain(lead.url))}</div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:8px">${L.name}</div>${line}
+      <div style="font-size:11px;color:#9ca3af">${L.date}</div>${line}
+      <div style="font-size:11px;color:#9ca3af">${L.sign}</div>${line}
+    </div>
+  </div>
+
+  ${legal ? `<div style="margin-top:40px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center">${legal}</div>` : ''}
+</div>
+</body>
+</html>`;
+  }
+
   // ── Init ──
   window.addEventListener('hashchange', route);
+  window.addEventListener('beforeunload', e => { if (settingsDirty) { e.preventDefault(); e.returnValue = ''; } });
   applyTranslations();
   route();
-  apiLoad();
+  apiLoadSettings().then(apiLoad);
   refreshServerPill();
   setInterval(refreshServerPill, 15000);
 </script>

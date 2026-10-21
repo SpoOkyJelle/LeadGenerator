@@ -18,6 +18,21 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS quotes (
+    lead_id TEXT PRIMARY KEY,
+    data TEXT NOT NULL,
+    updated INTEGER NOT NULL
+  )
+`);
+
 const app = express();
 const PORT = 3001;
 
@@ -436,11 +451,17 @@ app.use(express.json());
 
 // GET all leads
 app.get('/api/leads', (req, res) => {
-  const rows = db.prepare('SELECT * FROM leads ORDER BY created DESC').all();
+  const rows = db.prepare(`
+    SELECT l.*, q.data AS quote_data
+    FROM leads l LEFT JOIN quotes q ON q.lead_id = l.id
+    ORDER BY l.created DESC
+  `).all();
   res.json(rows.map(r => ({
     ...r,
     scanResult: r.scan_result ? JSON.parse(r.scan_result) : null,
+    quote: r.quote_data ? JSON.parse(r.quote_data) : null,
     scan_result: undefined,
+    quote_data: undefined,
   })));
 });
 
@@ -463,6 +484,41 @@ app.put('/api/leads/:id', (req, res) => {
 // DELETE lead
 app.delete('/api/leads/:id', (req, res) => {
   db.prepare('DELETE FROM leads WHERE id=?').run(req.params.id);
+  db.prepare('DELETE FROM quotes WHERE lead_id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ── Settings (key/value, values stored as JSON) ──
+app.get('/api/settings', (req, res) => {
+  const out = {};
+  for (const r of db.prepare('SELECT key, value FROM settings').all()) {
+    try { out[r.key] = JSON.parse(r.value); } catch { /* skip bad row */ }
+  }
+  res.json(out);
+});
+
+const upsertSetting = db.prepare(
+  'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+);
+
+app.put('/api/settings', (req, res) => {
+  const body = req.body || {};
+  db.transaction(() => {
+    for (const [key, value] of Object.entries(body)) upsertSetting.run(key, JSON.stringify(value));
+  })();
+  res.json({ ok: true });
+});
+
+// ── Quotes (one per lead) ──
+app.put('/api/quotes/:leadId', (req, res) => {
+  db.prepare(
+    'INSERT INTO quotes (lead_id, data, updated) VALUES (?, ?, ?) ON CONFLICT(lead_id) DO UPDATE SET data = excluded.data, updated = excluded.updated'
+  ).run(req.params.leadId, JSON.stringify(req.body || {}), Date.now());
+  res.json({ ok: true });
+});
+
+app.delete('/api/quotes/:leadId', (req, res) => {
+  db.prepare('DELETE FROM quotes WHERE lead_id=?').run(req.params.leadId);
   res.json({ ok: true });
 });
 
