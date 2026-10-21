@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadGen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><i class="fa-solid fa-bolt"></i></div>
+      <span>LeadGen</span>
+    </div>
+
+    <div class="nav-label" data-i18n="workspace">Workspace</div>
+    <a class="nav-item" id="nav-all" href="#/">
+      <i class="fa-solid fa-layer-group"></i>
+      <span data-i18n="allLeads">All leads</span>
+      <span class="nav-count" id="nav-count-all">0</span>
+    </a>
+    <a class="nav-item" id="nav-attention" href="#/attention">
+      <i class="fa-solid fa-fire"></i>
+      <span data-i18n="needsAttention">Needs attention</span>
+      <span class="nav-count hot" id="nav-count-attention"></span>
+    </a>
+    <a class="nav-item" id="nav-messages" href="#/messages">
+      <i class="fa-solid fa-paper-plane"></i>
+      <span data-i18n="messages">Messages</span>
+      <span class="nav-count hot" id="nav-count-messages"></span>
+    </a>
+
+    <div class="nav-label" data-i18n="general">General</div>
+    <a class="nav-item" id="nav-settings" href="#/settings">
+      <i class="fa-solid fa-gear"></i>
+      <span data-i18n="settings">Settings</span>
+    </a>
+
+    <div class="sidebar-foot">
+      <div class="seg small" id="lang-seg">
+        <button data-lang="en" onclick="setLang('en')">EN</button>
+        <button data-lang="nl" onclick="setLang('nl')">NL</button>
+      </div>
+      <div class="version">Lead Generator v1.1</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <nav class="crumbs" id="crumbs"></nav>
+      <div class="topbar-right">
+        <span class="server-pill" id="server-pill"><span class="d"></span><span id="server-text"></span></span>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- List view -->
+      <section id="view-list">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" id="list-title"></h1>
+            <p class="page-sub" id="list-sub"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-secondary" onclick="exportCSV()"><i class="fa-solid fa-download"></i><span data-i18n="exportCsv"></span></button>
+            <button class="btn btn-secondary" id="btn-scan-all" onclick="scanAllLeads()"><i class="fa-solid fa-satellite-dish"></i><span data-i18n="scanAll"></span></button>
+            <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i><span data-i18n="addLead"></span></button>
+          </div>
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="card quick">
+          <div class="q-url">
+            <i class="fa-solid fa-globe"></i>
+            <input type="text" id="quick-url" data-i18n="quickUrlPh" data-i18n-attr="placeholder" autocomplete="off" />
+          </div>
+          <div class="divider"></div>
+          <div class="q-name"><input type="text" id="quick-name" data-i18n="quickNamePh" data-i18n-attr="placeholder" autocomplete="off" /></div>
+          <div class="divider"></div>
+          <div class="q-status">
+            <select id="quick-status">
+              <option value="new" data-i18n="statusNew"></option>
+              <option value="contacted" data-i18n="statusContacted"></option>
+              <option value="qualified" data-i18n="statusQualified"></option>
+              <option value="rejected" data-i18n="statusRejected"></option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="quickAdd()"><span data-i18n="add"></span></button>
+        </div>
+
+        <div class="card">
+          <div class="table-tools">
+            <div class="seg" id="status-seg"></div>
+            <div class="search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="search-input" data-i18n="searchPlaceholder" data-i18n-attr="placeholder" oninput="render()" autocomplete="off" />
+              <kbd>/</kbd>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="colWebsite"></th>
+                  <th data-i18n="colStatus"></th>
+                  <th data-i18n="colTech"></th>
+                  <th data-i18n="colScan"></th>
+                  <th data-i18n="colAdded"></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="leads-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empty-state" class="empty" hidden></div>
+        </div>
+      </section>
+
+      <!-- Detail view -->
+      <section id="view-detail" hidden></section>
+
+      <!-- Settings view -->
+      <section id="view-settings" hidden></section>
+
+      <!-- Quote view -->
+      <section id="view-quote" hidden></section>
+
+      <!-- Outreach view -->
+      <section id="view-outreach" hidden></section>
+
+      <!-- Needs attention (action list) -->
+      <section id="view-attention" hidden></section>
+
+      <!-- Saved messages -->
+      <section id="view-messages" hidden></section>
+    </div>
+  </main>
+</div>
+
+<!-- Add / edit modal -->
+<div class="modal-backdrop" id="modal" onclick="if (event.target === this) closeModal()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="icon-btn" onclick="closeModal()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label data-i18n="websiteUrl"></label>
+        <input type="text" id="modal-url" placeholder="https://example.com" />
+      </div>
+      <div class="field">
+        <label data-i18n="companyName"></label>
+        <input type="text" id="modal-name" placeholder="Acme Inc." />
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label data-i18n="sEmail"></label>
+          <input type="email" id="modal-email" placeholder="info@bedrijf.nl" />
+        </div>
+        <div class="field">
+          <label data-i18n="sPhone"></label>
+          <input type="tel" id="modal-phone" placeholder="020 123 4567" />
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="status"></label>
+        <select id="modal-status">
+          <option value="new" data-i18n="statusNew"></option>
+          <option value="contacted" data-i18n="statusContacted"></option>
+          <option value="qualified" data-i18n="statusQualified"></option>
+          <option value="rejected" data-i18n="statusRejected"></option>
+        </select>
+      </div>
+      <div class="field">
+        <label data-i18n="notes"></label>
+        <textarea id="modal-notes" data-i18n="notesPlaceholder" data-i18n-attr="placeholder"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()" data-i18n="cancel"></button>
+      <button class="btn btn-primary" onclick="saveModal()" id="modal-save"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal-backdrop" id="confirm" onclick="if (event.target === this) closeConfirm()">
+  <div class="modal" role="alertdialog" aria-modal="true" style="width:400px">
+    <div class="modal-head"><div class="modal-title" id="confirm-title"></div></div>
+    <div class="modal-body"><p id="confirm-text"></p></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeConfirm()" data-i18n="cancel"></button>
+      <button class="btn btn-danger" id="confirm-ok" onclick="runConfirm()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Save message for later -->
+<div class="modal-backdrop" id="schedule" onclick="if (event.target === this) closeSchedule()">
+  <div class="modal" role="dialog" aria-modal="true" style="width:420px">
+    <div class="modal-head">
+      <div class="modal-title" data-i18n="scheduleTitle"></div>
+      <button class="icon-btn" onclick="closeSchedule()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p data-i18n="scheduleText"></p>
+      <div class="field">
+        <label for="schedule-date" data-i18n="sendOn"></label>
+        <input type="date" id="schedule-date" />
+      </div>
+      <div class="chips" id="schedule-chips"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSchedule()" data-i18n="cancel"></button>
+      <button class="btn btn-primary" onclick="confirmSchedule()"><i class="fa-regular fa-bookmark"></i><span data-i18n="saveForLater"></span></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-area" id="toasts"></div>
+
+<script src="js/i18n.js"></script>
+<script src="js/core.js"></script>
+<script src="js/leads.js"></script>
+<script src="js/detail.js"></script>
+<script src="js/scanner.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/quotes.js"></script>
+<script src="js/outreach.js"></script>
+<script src="js/messages.js"></script>
+<script src="js/attention.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

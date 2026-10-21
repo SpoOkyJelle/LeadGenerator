@@ -1,0 +1,191 @@
+// ── Settings ──
+const SERVICE_DEFS = [
+  { tech: 'SSL/HTTPS',        hours: 1.5, nl: 'SSL-certificaat installeren en HTTPS-migratie',  en: 'SSL certificate installation and HTTPS migration' },
+  { tech: 'PHP',              hours: 3,   nl: 'PHP-upgrade naar een ondersteunde versie',       en: 'PHP upgrade to a supported version' },
+  { tech: 'WordPress',        hours: 4,   nl: 'WordPress- en plugin-updates, beveiliging',      en: 'WordPress core & plugin updates and hardening' },
+  { tech: 'Drupal',           hours: 12,  nl: 'Drupal-upgrade en onderhoud',                    en: 'Drupal upgrade and maintenance' },
+  { tech: 'Joomla',           hours: 12,  nl: 'Joomla-upgrade of migratie',                     en: 'Joomla upgrade or migration' },
+  { tech: 'jQuery',           hours: 4,   nl: 'jQuery-upgrade en frontend-modernisering',       en: 'jQuery upgrade and frontend modernisation' },
+  { tech: 'Bootstrap',        hours: 8,   nl: 'Frontend-update naar Bootstrap 5',               en: 'Frontend update to Bootstrap 5' },
+  { tech: 'Apache',           hours: 2,   nl: 'Webserver (Apache) upgraden en beveiligen',      en: 'Web server (Apache) upgrade and hardening' },
+  { tech: 'Nginx',            hours: 2,   nl: 'Webserver (Nginx) upgraden en beveiligen',       en: 'Web server (Nginx) upgrade and hardening' },
+  { tech: 'Microsoft IIS',    hours: 4,   nl: 'Webserver (IIS) upgraden of migreren',           en: 'Web server (IIS) upgrade or migration' },
+  { tech: 'ASP.NET',          hours: 16,  nl: 'Upgrade naar een moderne .NET-versie',           en: 'Upgrade to a modern .NET version' },
+  { tech: 'Security Headers', hours: 1.5, nl: 'Beveiligingsheaders configureren',               en: 'Security header configuration' },
+  { tech: 'Availability',     hours: 3,   nl: 'Website weer werkend maken en monitoren',        en: 'Get the website working again and monitor it' },
+  { tech: 'SSL Certificate',  hours: 1,  nl: 'SSL-certificaat vernieuwen met automatische verlenging', en: 'SSL certificate renewal with auto-renewal' },
+  { tech: 'Mobile',           hours: 8,   nl: 'Website mobielvriendelijk maken',                en: 'Make the website mobile-friendly' },
+  { tech: 'Performance',      hours: 6,   nl: 'Snelheid van de website verbeteren',             en: 'Website speed optimisation' },
+  { tech: 'SEO',              hours: 3,   nl: 'SEO-basis op orde brengen (titels, omschrijvingen, koppen)', en: 'SEO basics (titles, descriptions, headings)' },
+  { tech: 'Privacy',          hours: 2,   nl: 'Privacyverklaring opstellen en plaatsen',        en: 'Write and add a privacy statement' },
+  { tech: 'Cookies',          hours: 3,   nl: 'AVG-proof cookiemelding installeren',            en: 'GDPR-compliant cookie banner' },
+  { tech: 'Copyright',        hours: 1,   nl: 'Content en footer bijwerken',                    en: 'Content and footer update' },
+];
+
+const DEFAULT_SETTINGS = {
+  companyName: '', contactName: '', email: '', phone: '', address: '', website: '',
+  kvk: '', vatNumber: '', iban: '',
+  hourlyRate: 75, vatRate: 21, validDays: 30, quotePrefix: 'OFF-', nextQuoteNumber: 1,
+  introText: '', termsText: '',
+  hours: {},
+};
+
+let settings = { ...DEFAULT_SETTINGS, hours: {} };
+
+async function apiLoadSettings() {
+  try {
+    const s = await (await fetch('/api/settings')).json();
+    settings = { ...DEFAULT_SETTINGS, ...s, hours: { ...(s.hours || {}) } };
+    if (!settingsDirty) settingsBuilt = false;
+  } catch {}
+}
+
+async function apiSaveSettings() {
+  await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+}
+
+function hoursFor(tech) {
+  const h = settings.hours[tech];
+  if (h !== undefined && h !== null && h !== '') return Number(h) || 0;
+  const def = SERVICE_DEFS.find(d => d.tech === tech);
+  return def ? def.hours : 1;
+}
+
+function serviceName(def) { return def[lang] || def.en; }
+
+const money = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n || 0);
+
+function formatQuoteNumber(prefix, n) {
+  return (prefix || '') + new Date().getFullYear() + '-' + String(n).padStart(3, '0');
+}
+
+function renderSettings() {
+  if (settingsBuilt) return;
+  settingsBuilt = true;
+  settingsDirty = false;
+  const s = settings;
+
+  const field = (key, label, o = {}) => {
+    const common = ' id="set-' + key + '" data-setting="' + key + '" placeholder="' + esc(o.ph || '') + '" oninput="markDirty()"';
+    let ctl = o.textarea
+      ? '<textarea' + common + ' rows="' + (o.rows || 3) + '">' + esc(s[key]) + '</textarea>'
+      : '<input' + common + ' type="' + (o.num ? 'number' : (o.type || 'text')) + '"' +
+        (o.num ? ' data-num min="0" step="' + (o.step || 1) + '"' : '') + ' value="' + esc(s[key]) + '">';
+    if (o.pre) ctl = '<div class="input-affix"><span>' + o.pre + '</span>' + ctl + '</div>';
+    if (o.suf) ctl = '<div class="input-affix suffix">' + ctl + '<span>' + esc(o.suf) + '</span></div>';
+    return '<div class="field' + (o.full ? ' full' : '') + '"><label for="set-' + key + '">' + esc(label) + '</label>' + ctl +
+      (o.hint !== undefined ? '<div class="hint" id="hint-' + key + '">' + esc(o.hint) + '</div>' : '') + '</div>';
+  };
+
+  const section = (title, desc, body, flush) =>
+    '<div class="card"><div class="card-head"><div><div class="card-title">' + esc(title) + '</div><div class="section-desc">' + esc(desc) + '</div></div></div>' +
+    (flush ? body : '<div class="card-body">' + body + '</div>') + '</div>';
+
+  const saveBtn = '<button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-check"></i>' + esc(t('saveSettings')) + '</button>';
+
+  const svcRows = SERVICE_DEFS.map((d, i) =>
+    '<tr><td><div style="font-weight:500">' + esc(serviceName(d)) + '</div><div class="site-sub">' + esc(d.tech) + '</div></td>' +
+    '<td style="text-align:right"><input class="num-input" type="number" min="0" step="0.25" data-hidx="' + i + '" value="' + esc(hoursFor(d.tech)) + '" oninput="markDirty()"></td>' +
+    '<td class="date" style="text-align:right;color:var(--text-2)" id="price-' + i + '"></td></tr>').join('');
+
+  $('view-settings').innerHTML =
+    '<div class="narrow fade-in">' +
+    '<div class="page-head"><div><h1 class="page-title">' + esc(t('settings')) + '</h1><p class="page-sub">' + esc(t('settingsSub')) + '</p></div>' +
+      '<div class="head-actions" style="align-items:center"><span class="dirty" id="settings-dirty" hidden>' + esc(t('unsaved')) + '</span>' + saveBtn + '</div></div>' +
+    '<div class="stack">' +
+      section(t('business'), t('businessDesc'), '<div class="form-grid">' +
+        field('companyName', t('sCompanyName'), { ph: 'Jouw Webbureau' }) +
+        field('contactName', t('sContactName')) +
+        field('email', t('sEmail'), { type: 'email', ph: 'info@jouwbedrijf.nl' }) +
+        field('phone', t('sPhone'), { type: 'tel' }) +
+        field('address', t('sAddress'), { textarea: true, rows: 2, full: true, ph: 'Straat 1\n1234 AB Plaats' }) +
+        field('website', t('sWebsite'), { ph: 'jouwbedrijf.nl' }) +
+        field('kvk', t('sKvk')) +
+        field('vatNumber', t('sVatNumber'), { ph: 'NL000000000B01' }) +
+        field('iban', t('sIban'), { ph: 'NL00 BANK 0000 0000 00' }) +
+      '</div>') +
+      section(t('rates'), t('ratesDesc'), '<div class="form-grid">' +
+        field('hourlyRate', t('sHourlyRate'), { num: true, step: 1, pre: '€' }) +
+        field('vatRate', t('sVatRate'), { num: true, step: 1, suf: '%' }) +
+        field('validDays', t('sValidDays'), { num: true, step: 1, suf: t('days') }) +
+        field('quotePrefix', t('sQuotePrefix'), { ph: 'OFF-' }) +
+        field('nextQuoteNumber', t('sNextNumber'), { num: true, step: 1, hint: '' }) +
+      '</div>') +
+      section(t('services'), t('servicesDesc'),
+        '<div class="table-scroll"><table class="svc-table" style="min-width:480px"><thead><tr><th>' + esc(t('colService')) + '</th><th style="text-align:right">' + esc(t('colHours')) +
+        '</th><th style="text-align:right">' + esc(t('colPrice')) + '</th></tr></thead><tbody>' + svcRows + '</tbody></table></div>', true) +
+      section(t('texts'), t('textsDesc'),
+        '<div class="form-grid">' +
+        field('introText', t('sIntro'), { textarea: true, rows: 4, full: true, ph: t('defaultIntro') }) +
+        field('termsText', t('sTerms'), { textarea: true, rows: 4, full: true, ph: t('defaultTerms') }) +
+        '</div>') +
+      section(t('ai'), t('aiDesc'),
+        '<div class="field"><label for="set-apiKey">' + esc(t('sApiKey')) + '</label>' +
+        '<input id="set-apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="' + (s.anthropicApiKeySet ? '••••••••••••' : 'sk-ant-…') + '" oninput="markDirty()">' +
+        '<div class="hint">' + esc(s.anthropicApiKeySet ? t('apiKeySet') : s.aiConfigured ? t('apiKeyEnv') : t('apiKeyHint')) + '</div></div>' +
+        '<div style="margin-top:14px">' + field('anthropicWorkspaceId', t('sWorkspace'), { ph: 'wrkspc_…', hint: t('workspaceHint') }) + '</div>' +
+        (s.anthropicApiKeySet ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="removeApiKey()"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button></div>' : '')) +
+      section(t('scannerSettings'), t('scannerSettingsDesc'),
+        '<div class="field"><label for="set-pagespeedKey">' + esc(t('sPagespeedKey')) + '</label>' +
+        '<input id="set-pagespeedKey" type="password" autocomplete="off" spellcheck="false" placeholder="' + (s.pagespeedApiKeySet ? '••••••••••••' : 'AIza…') + '" oninput="markDirty()">' +
+        '<div class="hint">' + esc(s.pagespeedApiKeySet ? t('apiKeySet') : t('pagespeedHint')) + '</div></div>' +
+        (s.pagespeedApiKeySet ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="removeApiKey(\'pagespeedApiKey\')"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button></div>' : '')) +
+      '<div style="display:flex;justify-content:flex-end">' + saveBtn + '</div>' +
+    '</div></div>';
+
+  updateSettingsPreview();
+}
+
+function markDirty() {
+  settingsDirty = true;
+  const d = $('settings-dirty');
+  if (d) d.hidden = false;
+  updateSettingsPreview();
+}
+
+function updateSettingsPreview() {
+  const rateEl = $('set-hourlyRate');
+  if (!rateEl) return;
+  const rate = parseFloat(rateEl.value) || 0;
+  document.querySelectorAll('[data-hidx]').forEach(el => {
+    const c = $('price-' + el.dataset.hidx);
+    if (c) c.textContent = money((parseFloat(el.value) || 0) * rate);
+  });
+  const n = Math.max(1, parseInt($('set-nextQuoteNumber').value, 10) || 1);
+  $('hint-nextQuoteNumber').textContent = t('sNumberPreview', formatQuoteNumber($('set-quotePrefix').value.trim(), n));
+}
+
+async function saveSettings() {
+  document.querySelectorAll('[data-setting]').forEach(el => {
+    settings[el.dataset.setting] = el.hasAttribute('data-num') ? (parseFloat(el.value) || 0) : el.value.trim();
+  });
+  settings.nextQuoteNumber = Math.max(1, Math.round(settings.nextQuoteNumber || 1));
+  document.querySelectorAll('[data-hidx]').forEach(el => {
+    settings.hours[SERVICE_DEFS[el.dataset.hidx].tech] = parseFloat(el.value) || 0;
+  });
+  // Keys are only sent when a new one was typed; the server never sends them back.
+  const secrets = {};
+  for (const [inputId, key] of [['set-apiKey', 'anthropicApiKey'], ['set-pagespeedKey', 'pagespeedApiKey']]) {
+    const el = $(inputId);
+    if (el && el.value.trim()) secrets[key] = el.value.trim();
+  }
+  const newKey = Object.keys(secrets).length > 0;
+  settingsDirty = false;
+  const d = $('settings-dirty');
+  if (d) d.hidden = true;
+  await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...settings, ...secrets }) });
+  if (newKey) {
+    await apiLoadSettings();
+    if (view === 'settings') render();
+  }
+  toast(t('toastSettingsSaved'), 'success');
+}
+
+async function removeApiKey(key = 'anthropicApiKey') {
+  await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: null }) });
+  settingsDirty = false;
+  await apiLoadSettings();
+  render();
+  toast(t('toastKeyRemoved'), '');
+}
