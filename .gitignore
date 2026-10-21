@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Local database (your leads and scan results)
+leads.db
+leads.db-journal
+leads.db-wal
+leads.db-shm
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

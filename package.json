@@ -1,0 +1,14 @@
+{
+  "name": "lead-generator",
+  "version": "1.0.0",
+  "description": "Lead Generator Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cheerio": "^1.0.0",
+    "better-sqlite3": "^9.4.3"
+  }
+}
