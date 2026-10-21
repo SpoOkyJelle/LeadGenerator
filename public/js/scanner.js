@@ -14,9 +14,9 @@ async function refreshServerPill() {
   $('server-text').textContent = ok ? t('serverOk') : t('serverDown');
 }
 
-async function scanLead(id) {
+async function scanLead(id, { quiet = false } = {}) {
   const lead = leads.find(l => l.id === id);
-  if (!lead || scanningIds.has(id)) return;
+  if (!lead || scanningIds.has(id)) return null;
 
   scanningIds.add(id);
   render();
@@ -46,39 +46,56 @@ async function scanLead(id) {
   }
 
   scanningIds.delete(id);
-  // Fill in contact details found on the site, but never overwrite ones you entered yourself
+  // Update contact details from the site. A value you typed yourself is kept; a value that came
+  // from an earlier scan is refreshed.
   const found = scanResult.contact || {};
+  const previous = (lead.scanResult && lead.scanResult.contact) || {};
   const changes = { scanResult };
-  if (!lead.email && found.email) changes.email = found.email;
-  if (!lead.phone && found.phone) changes.phone = found.phone;
+  if (found.email && (!lead.email || lead.email === previous.email)) changes.email = found.email;
+  if (found.phone && (!lead.phone || lead.phone === previous.phone)) changes.phone = found.phone;
   await saveLead(id, changes);
   render();
 
   const counts = countFindings(scanResult.findings);
+  if (quiet) return scanResult;
   if (scanResult.success) {
     const msg = counts.critical ? t('toastCrit', counts.critical) : counts.warning ? t('toastWarn', counts.warning) : t('toastClean');
     toast(domain(lead.url) + ' — ' + msg, counts.critical ? 'error' : counts.warning ? '' : 'success');
   } else {
     toast(t('toastScanFail') + ': ' + scanResult.error, 'error');
   }
+  return scanResult;
 }
 
-async function scanAllLeads() {
-  const todo = leads.filter(l => scanState(l) === 'none' || scanState(l) === 'error');
-  if (!todo.length) { toast(t('toastAllScanned'), ''); return; }
+// Rescans every lead (or only the ones never scanned / failed) and reports one summary at the end
+let scanAllProgress = null;
+
+async function scanAllLeads(onlyNew = false) {
+  if (scanAllRunning) return;
+  const todo = onlyNew ? leads.filter(l => ['none', 'error'].includes(scanState(l))) : leads.slice();
+  if (!todo.length) { toast(onlyNew ? t('toastAllScanned') : t('toastExportEmpty'), ''); return; }
 
   if (!(await checkServer())) { toast(t('toastNoServer'), 'error'); refreshServerPill(); return; }
 
   scanAllRunning = true;
+  scanAllProgress = { done: 0, total: todo.length };
   render();
-  toast(t('toastScanAllStart', todo.length), '');
+  let withIssues = 0, failed = 0, emails = 0;
   for (const lead of todo) {
-    await scanLead(lead.id);
-    await new Promise(r => setTimeout(r, 800));
+    const hadEmail = Boolean(lead.email);
+    const sr = await scanLead(lead.id, { quiet: true });
+    if (sr && !sr.success) failed++;
+    else if (sr && sr.findings.some(f => f.severity !== 'info')) withIssues++;
+    const updated = leads.find(l => l.id === lead.id);
+    if (!hadEmail && updated && updated.email) emails++;
+    scanAllProgress.done++;
+    render();
+    await new Promise(r => setTimeout(r, 300));
   }
   scanAllRunning = false;
+  scanAllProgress = null;
   render();
-  toast(t('toastScanAllDone'), 'success');
+  toast(t('toastScanAllSummary', todo.length, withIssues, emails, failed), failed ? '' : 'success');
 }
 
 function findingText(f, lang) {

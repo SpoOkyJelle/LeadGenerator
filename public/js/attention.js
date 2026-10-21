@@ -151,7 +151,8 @@ function renderAttention(a) {
   // 5. Unscanned leads hint
   if (a.unscanned) {
     html += '<div class="card banner"><i class="fa-solid fa-satellite-dish" style="color:var(--blue)"></i><div class="grow">' + esc(t('unscannedBanner', a.unscanned)) + '</div>' +
-      '<button class="btn btn-secondary btn-sm" onclick="scanAllLeads()"' + (scanAllRunning ? ' disabled' : '') + '><i class="fa-solid fa-satellite-dish"></i>' + esc(t('scanAll')) + '</button></div>';
+      '<button class="btn btn-secondary btn-sm" onclick="scanAllLeads(true)"' + (scanAllRunning ? ' disabled' : '') + '>' +
+        (scanAllProgress ? '<span class="spin"></span>' + esc(t('scanProgress', scanAllProgress.done, scanAllProgress.total)) : '<i class="fa-solid fa-satellite-dish"></i>' + esc(t('scanNew'))) + '</button></div>';
   }
 
   el.innerHTML = '<div class="fade-in">' + html + '</div>';

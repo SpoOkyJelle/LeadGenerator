@@ -38,6 +38,7 @@ function contactCard(l) {
       others.map(e => '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;padding:3px 0"><span style="overflow:hidden;text-overflow:ellipsis">' + esc(e) + '</span>' +
         '<button class="btn btn-ghost btn-sm" onclick="useEmail(\'' + id + '\', \'' + esc(e) + '\')">' + esc(t('useThis')) + '</button></div>').join('') + '</div>' : '') +
     (!l.email && !l.phone && l.scanResult ? '<div class="card-body hint" style="border-top:1px solid var(--border)">' + esc(t('noContactFound')) + '</div>' : '') +
+    (c.pagesChecked ? '<div class="card-body hint" style="border-top:1px solid var(--border);padding-top:10px;padding-bottom:10px">' + esc(t('pagesChecked', c.pagesChecked)) + '</div>' : '') +
     '</div>';
 }
 

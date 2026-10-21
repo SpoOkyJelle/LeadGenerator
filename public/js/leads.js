@@ -66,6 +66,8 @@ function renderList() {
   $('list-title').textContent = t('allLeads');
   $('list-sub').textContent = t('pageSubtitle');
   $('btn-scan-all').disabled = scanAllRunning;
+  $('scan-all-label').textContent = scanAllProgress ? t('scanProgress', scanAllProgress.done, scanAllProgress.total) : t('scanAll');
+  $('scan-all-icon').className = scanAllProgress ? 'spin' : 'fa-solid fa-satellite-dish';
 
   renderStats();
   renderStatusSeg();
