@@ -151,7 +151,7 @@ function render() {
   for (const v of ['list', 'detail', 'settings', 'quote', 'outreach', 'attention', 'messages']) $('view-' + v).hidden = view !== v;
 
   const a = attentionData();
-  const attentionCount = a.ready.length + a.followUp.length + a.due.length;
+  const attentionCount = a.viewed.length + a.ready.length + a.followUp.length + a.due.length;
   $('nav-count-all').textContent = leads.length;
   $('nav-count-attention').textContent = attentionCount || '';
   $('nav-count-messages').textContent = a.due.length || '';

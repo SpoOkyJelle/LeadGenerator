@@ -103,6 +103,19 @@ function renderSettings() {
         field('kvk', t('sKvk')) +
         field('vatNumber', t('sVatNumber'), { ph: 'NL000000000B01' }) +
         field('iban', t('sIban'), { ph: 'NL00 BANK 0000 0000 00' }) +
+      '</div>' +
+      // House style for the client report
+      '<div class="brand-row">' +
+        '<div class="field"><label>' + esc(t('sLogo')) + '</label>' +
+          '<div class="logo-box" id="logo-box">' + logoPreviewHtml(s.logoDataUrl) + '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px">' +
+            '<label class="btn btn-secondary btn-sm" style="cursor:pointer"><i class="fa-solid fa-upload"></i>' + esc(t('uploadLogo')) +
+              '<input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden onchange="uploadLogo(this.files[0])"></label>' +
+            '<button class="btn btn-ghost btn-sm" id="logo-remove" onclick="removeLogo()"' + (s.logoDataUrl ? '' : ' hidden') + '>' + esc(t('remove')) + '</button>' +
+          '</div><div class="hint" style="margin-top:6px">' + esc(t('logoHint')) + '</div></div>' +
+        '<div class="field"><label for="set-brandColor">' + esc(t('sBrandColor')) + '</label>' +
+          '<div style="display:flex;gap:8px;align-items:center"><input type="color" id="set-brandColor" data-setting="brandColor" value="' + esc(/^#[0-9a-f]{6}$/i.test(s.brandColor || '') ? s.brandColor : '#1f3a5f') + '" oninput="markDirty()" style="width:52px;padding:3px;cursor:pointer">' +
+          '<span class="hint">' + esc(t('brandColorHint')) + '</span></div></div>' +
       '</div>') +
       section(t('rates'), t('ratesDesc'), '<div class="form-grid">' +
         field('hourlyRate', t('sHourlyRate'), { num: true, step: 1, pre: '€' }) +
@@ -125,7 +138,21 @@ function renderSettings() {
         '<div class="hint">' + esc(s.anthropicApiKeySet ? t('apiKeySet') : s.aiConfigured ? t('apiKeyEnv') : t('apiKeyHint')) + '</div></div>' +
         '<div style="margin-top:14px">' + field('anthropicWorkspaceId', t('sWorkspace'), { ph: 'wrkspc_…', hint: t('workspaceHint') }) + '</div>' +
         (s.anthropicApiKeySet ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="removeApiKey()"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button></div>' : '')) +
+      section(t('shareSettings'), t('shareSettingsDesc'),
+        '<div class="form-grid">' +
+          field('publicReportUrl', t('sPublicReportUrl'), { full: true, ph: 'https://rapport.jouwbedrijf.nl', hint: s.publicReportUrl ? t('publicUrlActive', s.publicReportUrl) : t('publicUrlHint', s.reportPort || 3002) }) +
+          field('bookingUrl', t('sBookingUrl'), { full: true, ph: 'https://calendly.com/jouwnaam/10min', hint: t('bookingHint') }) +
+        '</div>' +
+        '<details class="howto"><summary>' + esc(t('tunnelTitle')) + '</summary><ol>' +
+          '<li>' + esc(t('tunnelStep1')) + '<code>winget install --id Cloudflare.cloudflared</code></li>' +
+          '<li>' + esc(t('tunnelStep2')) + '<code>cloudflared tunnel --url http://localhost:' + (s.reportPort || 3002) + '</code></li>' +
+          '<li>' + esc(t('tunnelStep3')) + '</li>' +
+          '<li>' + esc(t('tunnelStep4')) + ' <a class="link" href="https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/" target="_blank" rel="noopener">Cloudflare docs</a></li>' +
+        '</ol><p class="hint">' + esc(t('tunnelSafe')) + '</p></details>') +
       section(t('scannerSettings'), t('scannerSettingsDesc'),
+        '<label class="check-row"><input type="checkbox" id="set-screenshots"' + (s.screenshotsEnabled !== false ? ' checked' : '') + ' onchange="markDirty()"><span><b>' + esc(t('sScreenshots')) + '</b><br><span class="hint">' +
+          esc(s.screenshotBrowser ? t('screenshotsHint', s.screenshotBrowser) : t('noBrowser')) + '</span></span></label>' +
+        '<div style="height:16px"></div>' +
         '<div class="field"><label for="set-pagespeedKey">' + esc(t('sPagespeedKey')) + '</label>' +
         '<input id="set-pagespeedKey" type="password" autocomplete="off" spellcheck="false" placeholder="' + (s.pagespeedApiKeySet ? '••••••••••••' : 'AIza…') + '" oninput="markDirty()">' +
         '<div class="hint">' + esc(s.pagespeedApiKeySet ? t('apiKeySet') : t('pagespeedHint')) + '</div></div>' +
@@ -134,6 +161,45 @@ function renderSettings() {
     '</div></div>';
 
   updateSettingsPreview();
+}
+
+function logoPreviewHtml(dataUrl) {
+  return dataUrl ? '<img src="' + esc(dataUrl) + '" alt="">' : '<span class="hint">' + esc(t('noLogo')) + '</span>';
+}
+
+// Logos are scaled down in the browser and stored as a small data URL (SVG is kept as is)
+function uploadLogo(file) {
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { toast(t('logoTooBig'), 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const done = (dataUrl) => {
+      if (dataUrl.length > 600 * 1024) { toast(t('logoTooBig'), 'error'); return; }
+      settings.logoDataUrl = dataUrl;
+      $('logo-box').innerHTML = logoPreviewHtml(dataUrl);
+      $('logo-remove').hidden = false;
+      markDirty();
+    };
+    if (file.type === 'image/svg+xml') return done(reader.result);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 600 / img.width, 200 / img.height);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      done(c.toDataURL('image/png'));
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo() {
+  settings.logoDataUrl = '';
+  $('logo-box').innerHTML = logoPreviewHtml('');
+  $('logo-remove').hidden = true;
+  markDirty();
 }
 
 function markDirty() {
@@ -160,6 +226,10 @@ async function saveSettings() {
     settings[el.dataset.setting] = el.hasAttribute('data-num') ? (parseFloat(el.value) || 0) : el.value.trim();
   });
   settings.nextQuoteNumber = Math.max(1, Math.round(settings.nextQuoteNumber || 1));
+  settings.publicReportUrl = String(settings.publicReportUrl || '').trim().replace(/\/+$/, '');
+  if (settings.publicReportUrl && !/^https?:\/\//i.test(settings.publicReportUrl)) settings.publicReportUrl = 'https://' + settings.publicReportUrl;
+  const shotsEl = $('set-screenshots');
+  if (shotsEl) settings.screenshotsEnabled = shotsEl.checked;
   document.querySelectorAll('[data-hidx]').forEach(el => {
     settings.hours[SERVICE_DEFS[el.dataset.hidx].tech] = parseFloat(el.value) || 0;
   });
@@ -180,6 +250,7 @@ async function saveSettings() {
     if (view === 'settings') render();
   }
   toast(t('toastSettingsSaved'), 'success');
+  apiLoad(); // report links depend on the public address
 }
 
 async function removeApiKey(key = 'anthropicApiKey') {

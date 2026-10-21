@@ -6,3 +6,5 @@ route();
 apiLoadSettings().then(apiLoad);
 refreshServerPill();
 setInterval(refreshServerPill, 15000);
+// Notify when a client opens their report
+setInterval(checkReportViews, 30000);

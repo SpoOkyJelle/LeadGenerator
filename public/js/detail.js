@@ -145,13 +145,14 @@ function renderDetail() {
       }).join('');
     }
     main += '</div>';
+    main += screenshotsCard(l);
   }
 
   // Side column
   const statusOpts = ['new', 'contacted', 'qualified', 'rejected'].map(s =>
     '<option value="' + s + '"' + (l.status === s ? ' selected' : '') + '>' + esc(t('status' + s[0].toUpperCase() + s.slice(1))) + '</option>').join('');
 
-  let side = stepsCard(l) + quoteCard(l) + '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +
+  let side = stepsCard(l) + reportCard(l) + quoteCard(l) +'<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +
     kvRow(t('status'), '<select onchange="setStatus(\'' + id + '\', this.value)">' + statusOpts + '</select>') +
     kvRow(t('company'), l.name ? esc(l.name) : '<span class="dash">—</span>') +
     kvRow(t('added'), esc(fmtDate(l.created))) +

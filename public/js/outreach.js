@@ -36,14 +36,23 @@ let outreachPending = null;
 let outreachSaveState = 'saved';
 
 function defaultOutreach() {
-  return { channel: 'email', tone: 'friendly', length: 'normal', formality: 'u', extra: '', subject: '', body: '', source: null, kind: 'first', report: 'offer' };
+  // Once the report pages are online, sharing a link (with "opened" tracking) is the best default
+  return { channel: 'email', tone: 'friendly', length: 'normal', formality: 'u', extra: '', subject: '', body: '', source: null, kind: 'first', report: settings.publicReportUrl ? 'link' : 'offer' };
 }
 
-// How the scan report is used: offer it, attach it as a PDF (email only) or summarise it in the text
+// How the scan report is used: offer it, share a link, attach it as a PDF (email only) or summarise it
 function effectiveReport(d) {
   if (d.channel === 'phone') return 'offer';
-  if (d.channel === 'linkedin' && d.report === 'attach') return 'offer';
+  if (d.channel === 'linkedin' && d.report === 'attach') return 'link';
   return d.report || 'offer';
+}
+
+// Make sure the online report exists before a message links to it
+async function ensureReportLink(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return null;
+  if (lead.report) return lead.report.url;
+  return publishReport(leadId, { silent: true });
 }
 
 function leadSocial(l, key) {
@@ -183,8 +192,8 @@ function renderOutreach() {
       group(t('channel'), seg('channel',[['email', t('chEmail')], ['linkedin', t('chLinkedin')], ['phone', t('chPhone')]])) +
       group(t('tone'), seg('tone', [['friendly', t('toneFriendly')], ['professional', t('toneProfessional')], ['direct', t('toneDirect')]])) +
       group(t('length'), seg('length', [['short', t('lenShort')], ['normal', t('lenNormal')]])) +
-      (d.channel === 'email' ? group(t('repLabel'), seg('report', [['offer', t('repOffer')], ['attach', t('repAttach')], ['summary', t('repSummary')]]))
-        : d.channel === 'linkedin' ? group(t('repLabel'), '<div class="seg full">' + [['offer', t('repOffer')], ['summary', t('repSummary')]].map(([v, label]) =>
+      (d.channel === 'email' ? group(t('repLabel'), seg('report', [['offer', t('repOffer')], ['link', t('repLink')], ['attach', t('repAttach')], ['summary', t('repSummary')]]).replace('seg full', 'seg full grid2'))
+        : d.channel === 'linkedin' ? group(t('repLabel'), '<div class="seg full">' + [['offer', t('repOffer')], ['link', t('repLink')], ['summary', t('repSummary')]].map(([v, label]) =>
             '<button class="' + (effectiveReport(d) === v ? 'active' : '') + '" onclick="oSet(\'report\', \'' + v + '\')">' + esc(label) + '</button>').join('') + '</div>')
         : '') +
       (lang === 'nl' ? group(t('formality'), seg('formality', [['u', 'u'], ['je', 'je']])) : '') +
@@ -251,6 +260,12 @@ async function runGenerateOutreach() {
   outreachError = null;
   render();
   try {
+    if (effectiveReport(d) === 'link' && !(await ensureReportLink(leadId))) {
+      outreachError = t('reportNeedsScan');
+      outreachGeneratingId = null;
+      render();
+      return;
+    }
     const res = await fetch('/api/outreach/' + encodeURIComponent(leadId) + '/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -279,7 +294,12 @@ async function runGenerateOutreach() {
 function useTemplate() {
   const l = currentLead();
   if (!l || !outreachDraft) return;
-  confirmReplace(() => {
+  confirmReplace(async () => {
+    if (effectiveReport(outreachDraft) === 'link' && !(await ensureReportLink(l.id))) {
+      outreachError = t('reportNeedsScan');
+      renderOutreach();
+      return;
+    }
     const tpl = templateOutreach(l, outreachDraft);
     outreachDraft.subject = tpl.subject;
     outreachDraft.body = tpl.body;
@@ -312,11 +332,15 @@ function templateOutreach(l, d) {
   const summaryBlock = allItems.length
     ? (nl ? '\n\nKorte samenvatting van de scan:\n' : '\n\nShort summary of the scan:\n') + allItems.join('\n')
     : '';
-  const callCta = nl ? `Zullen we 10 minuten bellen om het samen door te nemen?` : 'Shall we have a 10-minute call to go through it?';
+  const booking = s.bookingUrl ? (nl ? ` Kies hier zelf een moment:\n${s.bookingUrl}` : ` Pick a time that suits you:\n${s.bookingUrl}`) : '';
+  const callCta = (nl ? 'Zullen we 10 minuten bellen om het samen door te nemen?' : 'Shall we have a 10-minute call to go through it?') + booking;
+  const reportUrl = l.report ? l.report.url : '';
   const cta = report === 'attach'
     ? (nl ? `In de bijlage ${U('vindt u', 'vind je')} het volledige scanrapport. ` : 'You will find the full scan report attached. ') + callCta
     : report === 'summary' ? summaryBlock + '\n\n' + callCta
+    : report === 'link' && reportUrl ? (nl ? `Ik heb de bevindingen voor ${U('u', 'je')} op een overzichtelijke pagina gezet:\n${reportUrl}\n\n` : `I put the findings on a clear page for you:\n${reportUrl}\n\n`) + callCta
     : null;
+  const ctaText = cta ? cta.trim() : null;
 
   if (d.kind === 'followup' && d.channel !== 'phone') {
     const prev = lastSent(l.id);
@@ -327,10 +351,10 @@ function templateOutreach(l, d) {
       body: nl
         ? `${hi}\n\nIk stuurde ${U('u', 'je')} ${when} een bericht over de scan van ${dom}. Ik begrijp dat het druk kan zijn, dus ik wilde het nog even onder ${U('uw', 'je')} aandacht brengen.` +
           (items.length && report !== 'summary' ? `\n\nKort samengevat: ${items[0].slice(2).toLowerCase()} is het belangrijkste punt.` : '') +
-          `\n\n${report === 'attach' ? 'Ik heb het scanrapport voor het gemak nogmaals bijgevoegd. ' + callCta : report === 'summary' ? cta.trim() : 'Zal ik het scanrapport alsnog kosteloos toesturen?'}\n\nMet vriendelijke groet,\n${sig || me}`
+          `\n\n${report === 'attach' ? 'Ik heb het scanrapport voor het gemak nogmaals bijgevoegd. ' + callCta : ctaText || 'Zal ik het scanrapport alsnog kosteloos toesturen?'}\n\nMet vriendelijke groet,\n${sig || me}`
         : `${hi}\n\nI sent you a message ${when} about the scan of ${dom}. I know things get busy, so I wanted to bring it back to your attention.` +
           (items.length && report !== 'summary' ? `\n\nIn short: ${items[0].slice(2)} is the most important point.` : '') +
-          `\n\n${report === 'attach' ? 'I have attached the scan report again for convenience. ' + callCta : report === 'summary' ? cta.trim() : 'Shall I still send you the free scan report?'}\n\nBest regards,\n${sig || me}`,
+          `\n\n${report === 'attach' ? 'I have attached the scan report again for convenience. ' + callCta : ctaText || 'Shall I still send you the free scan report?'}\n\nBest regards,\n${sig || me}`,
     };
   }
 
@@ -381,8 +405,8 @@ function templateOutreach(l, d) {
     return {
       subject: '',
       body: nl
-        ? `Hoi${l.name ? ' ' + l.name : ''},\n\nIk keek naar ${dom} en zag ${items.length ? 'een paar technische punten (o.a. ' + items[0].slice(2) + ') die makkelijk op te lossen zijn' : 'een mooie site'}. ${report === 'summary' ? cta.trim() : `Zal ik ${U('u', 'je')} het gratis scanrapport sturen?`}\n\nGroet,\n${me}`
-        : `Hi${l.name ? ' ' + l.name : ''},\n\nI had a look at ${dom} and noticed ${items.length ? 'a few technical points (incl. ' + items[0].slice(2) + ') that are easy to fix' : 'a nicely built site'}. ${report === 'summary' ? cta.trim() : 'Shall I send you the free scan report?'}\n\nBest,\n${me}`,
+        ? `Hoi${l.name ? ' ' + l.name : ''},\n\nIk keek naar ${dom} en zag ${items.length ? 'een paar technische punten (o.a. ' + items[0].slice(2) + ') die makkelijk op te lossen zijn' : 'een mooie site'}. ${ctaText || `Zal ik ${U('u', 'je')} het gratis scanrapport sturen?`}\n\nGroet,\n${me}`
+        : `Hi${l.name ? ' ' + l.name : ''},\n\nI had a look at ${dom} and noticed ${items.length ? 'a few technical points (incl. ' + items[0].slice(2) + ') that are easy to fix' : 'a nicely built site'}. ${ctaText || 'Shall I send you the free scan report?'}\n\nBest,\n${me}`,
     };
   }
 

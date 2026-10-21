@@ -33,7 +33,12 @@ function attentionData() {
   });
   const openQuotes = leads.filter(l => l.quote && (l.status === 'new' || l.status === 'contacted'));
   const unscanned = leads.filter(l => ['none', 'error'].includes(scanState(l))).length;
-  return { due, ready, followUp, openQuotes, unscanned };
+  // Opened their report in the last week and no outcome yet: the warmest moment to call
+  const weekAgo = Date.now() - 7 * 864e5;
+  const viewed = leads
+    .filter(l => l.report && l.report.lastViewAt > weekAgo && (l.status === 'new' || l.status === 'contacted'))
+    .sort((a, b) => b.report.lastViewAt - a.report.lastViewAt);
+  return { viewed, due, ready, followUp, openQuotes, unscanned };
 }
 
 function statCard(label, value, sub, icon, tone) {
@@ -84,7 +89,24 @@ function renderAttention(a) {
     statCard(t('kpiValue'), moneyRound(value), t('kpiValueSub'), 'fa-euro-sign', 'tone-green') +
     '</div>';
 
-  const nothing = !a.due.length && !a.ready.length && !a.followUp.length && !a.openQuotes.length;
+  const nothing = !a.viewed.length && !a.due.length && !a.ready.length && !a.followUp.length && !a.openQuotes.length;
+
+  // 0. Opened their report recently: call while it's fresh
+  if (a.viewed.length) {
+    html += sectionHead(t('secViewed'), a.viewed.length, t('secViewedHint'));
+    html += '<div class="card rows">' + a.viewed.map(l => {
+      const r = l.report;
+      const id = esc(l.id);
+      return '<div class="row-item">' + favicon(l.url) +
+        '<div class="grow">' + leadLink(l) + '<div class="meta"><span class="viewed-badge"><i class="fa-solid fa-eye"></i>' + esc(t('viewedTimes', r.views)) + '</span> · ' +
+          esc(t('lastViewed', timeAgo(r.lastViewAt))) + ' · ' + esc(t('readingTime', fmtDuration(r.totalSeconds))) + '</div></div>' +
+        '<div class="row-actions-static">' +
+          (l.phone ? '<a class="btn btn-primary btn-sm" href="tel:' + esc(l.phone) + '"><i class="fa-solid fa-phone"></i>' + esc(t('callNow')) + ' ' + esc(l.phone) + '</a>' : '') +
+          '<a class="btn btn-secondary btn-sm" href="#/lead/' + encodeURIComponent(l.id) + '/outreach"><i class="fa-solid fa-reply"></i>' + esc(t('followUpMsg')) + '</a>' +
+          '<button class="btn btn-ghost btn-sm" onclick="setStatus(\'' + id + '\', \'qualified\')"><i class="fa-solid fa-thumbs-up"></i>' + esc(t('interested')) + '</button>' +
+        '</div></div>';
+    }).join('') + '</div>';
+  }
   if (nothing) {
     html += '<div class="card empty"><div class="empty-icon" style="color:var(--green)"><i class="fa-solid fa-mug-hot"></i></div><h3>' + esc(t('allDone')) + '</h3><p>' + esc(t('allDoneHint')) + '</p></div>';
   }

@@ -23,12 +23,15 @@ async function scanLead(id, { quiet = false } = {}) {
 
   let scanResult;
   try {
-    const res = await fetch(SCANNER_URL + '/api/scan?url=' + encodeURIComponent(lead.url));
+    const res = await fetch(SCANNER_URL + '/api/scan?url=' + encodeURIComponent(lead.url) + '&leadId=' + encodeURIComponent(id));
     const data = await res.json();
     scanResult = {
       success: data.success,
       findings: data.findings || [],
       contact: data.contact || null,
+      profile: data.profile || null,
+      screenshots: data.screenshots || (lead.scanResult && lead.scanResult.screenshots) || null,
+      logo: data.logo || (lead.scanResult && lead.scanResult.logo) || null,
       error: data.errorCode === 'blocked' ? t('scanBlocked', data.httpStatus)
         : data.errorCode ? t('scanErr_' + data.errorCode, domain(lead.url))
         : (data.error || null),
@@ -54,6 +57,8 @@ async function scanLead(id, { quiet = false } = {}) {
   if (found.email && (!lead.email || lead.email === previous.email)) changes.email = found.email;
   if (found.phone && (!lead.phone || lead.phone === previous.phone)) changes.phone = found.phone;
   await saveLead(id, changes);
+  // A published report follows the latest scan (same link, new content)
+  if (lead.report && scanResult.success) await publishReport(id, { silent: true });
   render();
 
   const counts = countFindings(scanResult.findings);
@@ -275,139 +280,4 @@ function copyReport() {
     });
   }
   navigator.clipboard.writeText(text).then(() => toast(t('toastCopied'), 'success'));
-}
-
-function downloadPdf(leadId) {
-  const lead = leadId ? leads.find(l => l.id === leadId) : currentLead();
-  if (!lead || !lead.scanResult) return;
-  const html = generateReportHTML(lead, lang);
-  const win = window.open('', '_blank');
-  win.document.write(html);
-  win.document.close();
-  setTimeout(() => win.print(), 600);
-}
-
-function generateReportHTML(lead, lang) {
-  const nl = lang === 'nl';
-  const sr = lead.scanResult;
-  const findings = sr.findings || [];
-  const counts = countFindings(findings);
-  const scanDate = new Date(sr.scannedAt).toLocaleDateString(nl ? 'nl-NL' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-  const sevMeta = {
-    critical: { label: nl ? 'Kritiek'      : 'Critical', color: '#b91c1c', bg: '#fef2f2', border: '#fca5a5', dot: '#dc2626' },
-    warning:  { label: nl ? 'Waarschuwing' : 'Warning',  color: '#92400e', bg: '#fffbeb', border: '#fcd34d', dot: '#d97706' },
-    info:     { label: 'Info',                            color: '#1e3a8a', bg: '#eff6ff', border: '#93c5fd', dot: '#2563eb' },
-  };
-
-  const findingsHtml = findings.length === 0
-    ? `<p style="color:#6b7280;padding:32px 0;text-align:center;font-size:14px">${nl ? 'Er zijn geen problemen gevonden tijdens deze scan.' : 'No issues were detected during this scan.'}</p>`
-    : findings.map(f => {
-        const ft = findingText(f, lang);
-        const m = sevMeta[f.severity] || sevMeta.info;
-        const hasVer = f.version && f.version !== 'detected';
-        return `
-          <div style="margin-bottom:12px;border:1px solid ${m.border};border-radius:8px;overflow:hidden;page-break-inside:avoid">
-            <div style="background:${m.bg};padding:14px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
-              <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.dot};flex-shrink:0"></span>
-                  <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:${m.color}">${m.label}</span>
-                  <span style="color:#d1d5db;font-size:10px">|</span>
-                  <span style="font-size:11px;color:#6b7280;font-weight:500">${f.tech}${hasVer ? ' v' + f.version : ''}</span>
-                </div>
-                <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:6px">${ft.title}</div>
-                <div style="font-size:13px;color:#374151;line-height:1.6">${ft.description}</div>
-                ${ft.opportunity ? `
-                <div style="margin-top:10px;padding:10px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;color:#111827;display:flex;gap:8px;align-items:flex-start">
-                  <span style="color:#4f46e5;font-weight:700;flex-shrink:0">${nl ? 'Aanbeveling' : 'Recommendation'}:</span>
-                  <span style="color:#374151">${ft.opportunity}</span>
-                </div>` : ''}
-              </div>
-              ${hasVer ? `<div style="flex-shrink:0;text-align:right;padding-left:8px"><div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${nl ? 'Versie' : 'Version'}</div><div style="font-size:18px;font-weight:800;color:${m.dot};font-variant-numeric:tabular-nums">${f.version}</div></div>` : ''}
-            </div>
-          </div>`;
-      }).join('');
-
-  const recs = findings
-    .filter(f => f.severity !== 'info')
-    .map(f => findingText(f, lang).opportunity)
-    .filter(Boolean)
-    .filter((v, i, a) => a.indexOf(v) === i);
-
-  const recSection = recs.length ? `
-    <div style="margin-top:32px;page-break-inside:avoid">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb">${nl ? 'Aanbevelingen' : 'Recommendations'}</div>
-      ${recs.map((r, i) => `
-        <div style="display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f3f4f6">
-          <span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#4f46e5;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px">${i + 1}</span>
-          <span style="font-size:13px;color:#374151;line-height:1.5">${r}</span>
-        </div>`).join('')}
-    </div>` : '';
-
-  return `<!DOCTYPE html>
-<html lang="${nl ? 'nl' : 'en'}">
-<head>
-<meta charset="UTF-8"/>
-<title>${nl ? 'Website Audit Rapport' : 'Website Audit Report'} — ${esc(domain(lead.url))}</title>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; background: #f3f4f6; color: #111827; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.page { max-width: 860px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.1); }
-@media print {
-  body { background: #fff; }
-  .page { max-width: 100%; margin: 0; border-radius: 0; box-shadow: none; }
-  @page { margin: 15mm 15mm; size: A4; }
-}
-</style>
-</head>
-<body>
-<div class="page">
-<div style="background:#1e1b4b;color:#fff;padding:32px 40px;display:flex;justify-content:space-between;align-items:flex-end">
-  <div>
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#a5b4fc;margin-bottom:10px;font-weight:600">LeadGen Scanner</div>
-    <div style="font-size:24px;font-weight:800;letter-spacing:-.3px;line-height:1.1">${nl ? 'Website Audit Rapport' : 'Website Audit Report'}</div>
-    <div style="font-size:14px;color:#c7d2fe;margin-top:6px">${esc(domain(lead.url))}</div>
-  </div>
-  <div style="text-align:right">
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#a5b4fc;margin-bottom:4px">${nl ? 'Scandatum' : 'Scan date'}</div>
-    <div style="font-size:14px;font-weight:600;color:#e0e7ff">${scanDate}</div>
-  </div>
-</div>
-
-<div style="background:#f8fafc;border-bottom:1px solid #e5e7eb;padding:14px 40px;display:flex;gap:32px;flex-wrap:wrap">
-  <div style="font-size:12px;color:#6b7280"><span style="font-weight:600;color:#374151;margin-right:6px">Website:</span><a href="${esc(lead.url)}" style="color:#4f46e5;text-decoration:none">${esc(lead.url)}</a></div>
-  ${lead.name ? `<div style="font-size:12px;color:#6b7280"><span style="font-weight:600;color:#374151;margin-right:6px">${nl ? 'Bedrijf' : 'Company'}:</span>${esc(lead.name)}</div>` : ''}
-</div>
-
-<div style="padding:36px 40px">
-  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb">${nl ? 'Samenvatting' : 'Executive Summary'}</div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px">
-    <div style="border:1px solid #fca5a5;border-radius:8px;padding:18px 20px;background:#fef2f2">
-      <div style="font-size:32px;font-weight:800;color:#dc2626;line-height:1">${counts.critical}</div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#b91c1c;margin-top:6px;font-weight:600">${nl ? 'Kritieke problemen' : 'Critical issues'}</div>
-    </div>
-    <div style="border:1px solid #fcd34d;border-radius:8px;padding:18px 20px;background:#fffbeb">
-      <div style="font-size:32px;font-weight:800;color:#d97706;line-height:1">${counts.warning}</div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#92400e;margin-top:6px;font-weight:600">${nl ? 'Waarschuwingen' : 'Warnings'}</div>
-    </div>
-    <div style="border:1px solid #93c5fd;border-radius:8px;padding:18px 20px;background:#eff6ff">
-      <div style="font-size:32px;font-weight:800;color:#2563eb;line-height:1">${counts.info}</div>
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#1e3a8a;margin-top:6px;font-weight:600">${nl ? 'Informatief' : 'Informational'}</div>
-    </div>
-  </div>
-
-  <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb">${nl ? 'Bevindingen' : 'Findings'}</div>
-  ${findingsHtml}
-
-  ${recSection}
-</div>
-
-<div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:16px 40px;display:flex;justify-content:space-between;align-items:center">
-  <div style="font-size:11px;color:#9ca3af">${nl ? 'Automatisch gegenereerd door LeadGen Scanner' : 'Generated by LeadGen Scanner'}</div>
-  <div style="font-size:11px;color:#9ca3af">${scanDate}</div>
-</div>
-</div>
-</body>
-</html>`;
 }

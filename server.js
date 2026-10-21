@@ -1,8 +1,10 @@
 const path = require('path');
 const express = require('express');
 const { db, getSetting } = require('./lib/db');
-const { scanSite } = require('./lib/scanner');
+const { scanSite, fetchSiteLogo } = require('./lib/scanner');
 const { aiConfigured, generateOutreach, OutreachError } = require('./lib/ai');
+const { takeScreenshots, findBrowser, screenshotPath, saveImage } = require('./lib/screenshot');
+const reports = require('./lib/reports');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -27,14 +29,34 @@ app.get('/api/scan', async (req, res) => {
   if (!targetUrl) return res.json({ success: false, error: 'Missing url parameter', findings: [] });
   if (!/^https?:\/\//i.test(targetUrl)) targetUrl = 'https://' + targetUrl;
 
+  // Screenshots run alongside the scan (they need the lead id for the file names)
+  const leadId = req.query.leadId ? String(req.query.leadId) : null;
+  const wantShots = leadId && getSetting('screenshotsEnabled') !== false;
+  const shotsPromise = wantShots ? takeScreenshots(targetUrl, leadId) : Promise.resolve(null);
+
   try {
     const result = await scanSite(targetUrl, { pagespeedKey: getSetting('pagespeedApiKey') });
+    const screenshots = await shotsPromise;
+    const findings = result.findings;
+    // Measured on a real phone-sized screen: does the page need sideways scrolling?
+    if (screenshots && screenshots.mobileOverflow > 20 && !findings.some(f => f.tech === 'Mobile')) {
+      findings.push({ tech: 'Mobile', severity: 'warning', overflow: screenshots.mobileOverflow,
+        title: 'Page does not fit on a phone screen',
+        description: `On a phone the page is ${screenshots.mobileOverflow}px wider than the screen, so visitors have to scroll sideways. Google ranks such pages lower in mobile search.` });
+      const order = { critical: 0, warning: 1, info: 2 };
+      findings.sort((a, b) => (order[a.severity] ?? 3) - (order[b.severity] ?? 3));
+    }
+    // The client's own logo, for the report
+    const logo = leadId && result.logo ? saveImage(`${leadId}-logo`, result.logo.buffer, result.logo.type) : null;
     return res.json({
       success: true,
       url: result.finalUrl,
       statusCode: result.statusCode,
-      findings: result.findings,
+      findings,
       contact: result.contact,
+      profile: result.profile,
+      screenshots,
+      logo,
       scannedAt: new Date().toISOString(),
     });
   } catch (err) {
@@ -57,8 +79,10 @@ app.get('/api/leads', (req, res) => {
     LEFT JOIN outreach o ON o.lead_id = l.id
     ORDER BY l.created DESC
   `).all();
+  const reportInfo = reports.reportSummaries();
   res.json(rows.map(r => ({
     ...r,
+    report: reportInfo[r.id] || null,
     email: r.email || '',
     phone: r.phone || '',
     scanResult: r.scan_result ? JSON.parse(r.scan_result) : null,
@@ -88,7 +112,59 @@ app.delete('/api/leads/:id', (req, res) => {
   for (const table of ['leads', 'quotes', 'outreach', 'messages']) {
     db.prepare(`DELETE FROM ${table} WHERE ${table === 'leads' ? 'id' : 'lead_id'}=?`).run(req.params.id);
   }
+  reports.deleteReport(req.params.id);
   res.json({ ok: true });
+});
+
+// ── Screenshots & client reports ──
+app.get('/api/screenshots/:file', (req, res) => {
+  const file = screenshotPath(req.params.file);
+  if (!file) return res.sendStatus(404);
+  reports.sendImage(res, file);
+});
+
+// Your own logo, taken from your own website (returned as a data URL for the settings)
+app.get('/api/fetch-logo', async (req, res) => {
+  let url = String(req.query.url || '').trim();
+  if (!url) return res.status(400).json({ error: 'no_url' });
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  try {
+    const logo = await fetchSiteLogo(url);
+    if (!logo) return res.status(404).json({ error: 'not_found' });
+    res.json({ dataUrl: `data:${logo.type};base64,${logo.buffer.toString('base64')}`, source: logo.url });
+  } catch {
+    res.status(404).json({ error: 'not_found' });
+  }
+});
+
+// Publish (or update) the client-facing report page; the token and link stay the same
+app.put('/api/reports/:leadId', (req, res) => {
+  const lead = db.prepare('SELECT id FROM leads WHERE id=?').get(req.params.leadId);
+  const html = req.body && req.body.html;
+  if (!lead || typeof html !== 'string' || !html.includes('</body>')) return res.status(400).json({ error: 'Invalid report' });
+  res.json(reports.saveReport(lead.id, html, req.body.lang));
+});
+
+app.delete('/api/reports/:leadId', (req, res) => {
+  reports.deleteReport(req.params.leadId);
+  res.json({ ok: true });
+});
+
+// Preview for yourself: same page, but views are not counted
+app.get('/api/reports/:leadId/preview', (req, res) => {
+  const r = db.prepare('SELECT html FROM reports WHERE lead_id=?').get(req.params.leadId);
+  if (!r) return res.sendStatus(404);
+  res.type('html').send(reports.renderReport(r.html, `/api/reports/${encodeURIComponent(req.params.leadId)}/img/`, false));
+});
+
+app.get('/api/reports/:leadId/img/:kind', (req, res) => {
+  const file = reports.leadScreenshot(req.params.leadId, req.params.kind);
+  if (!file) return res.sendStatus(404);
+  reports.sendImage(res, file);
+});
+
+app.get('/api/report-views', (req, res) => {
+  res.json(reports.recentViews(req.query.since));
 });
 
 // ── Saved messages (to send later / already sent) ──
@@ -122,6 +198,10 @@ app.get('/api/settings', (req, res) => {
   out.anthropicApiKeySet = Boolean(getSetting('anthropicApiKey'));
   out.pagespeedApiKeySet = Boolean(getSetting('pagespeedApiKey'));
   out.aiConfigured = aiConfigured();
+  const browser = findBrowser();
+  out.screenshotBrowser = browser ? path.basename(browser) : null;
+  out.reportPort = reports.REPORT_PORT;
+  out.publicBaseUrl = reports.publicBaseUrl();
   res.json(out);
 });
 
@@ -133,7 +213,7 @@ app.put('/api/settings', (req, res) => {
   const body = req.body || {};
   db.transaction(() => {
     for (const [key, value] of Object.entries(body)) {
-      if (['anthropicApiKeySet', 'pagespeedApiKeySet', 'aiConfigured'].includes(key)) continue;
+      if (['anthropicApiKeySet', 'pagespeedApiKeySet', 'aiConfigured', 'screenshotBrowser', 'reportPort', 'publicBaseUrl'].includes(key)) continue;
       if (SECRET_KEYS.includes(key)) {
         // null removes a secret, an empty string leaves it unchanged
         if (value === null) db.prepare('DELETE FROM settings WHERE key=?').run(key);
@@ -173,9 +253,17 @@ app.post('/api/outreach/:leadId/generate', async (req, res) => {
     extra: body.extra || '',
     followUp: body.followUp || null,
     reportMode: body.reportMode || 'offer',
+    reportUrl: null,
+    bookingUrl: String(getSetting('bookingUrl') || '').trim() || null,
   };
+  if (options.reportMode === 'link') {
+    const info = reports.reportSummaries()[lead.id];
+    if (!info) return res.status(400).json({ error: 'no_report' });
+    options.reportUrl = info.url;
+  }
   const scan = lead.scan_result ? JSON.parse(lead.scan_result) : null;
   const findings = (scan && scan.success ? scan.findings : []).filter(f => f.severity !== 'info');
+  options.profile = scan && scan.profile ? scan.profile : null;
 
   try {
     return res.json(await generateOutreach(lead, findings, options));
@@ -202,6 +290,9 @@ app.delete('/api/quotes/:leadId', (req, res) => {
 });
 
 // ── Start ──
+// Report pages get their own server so you can put only that one online (e.g. via a Cloudflare Tunnel)
+reports.startPublicServer(process.env.REPORT_HOST || '127.0.0.1');
+
 app.listen(PORT, HOST, () => {
   const url = `http://localhost:${PORT}`;
   console.log(`LeadGen running at ${url}`);

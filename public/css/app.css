@@ -414,6 +414,7 @@ textarea.bare:focus { box-shadow: none; background: rgba(255,255,255,.015); }
 .opt-group > label { font-size: 12.5px; font-weight: 500; color: var(--text-2); }
 .seg.full { display: flex; }
 .seg.full button { flex: 1; justify-content: center; }
+.seg.grid2 { display: grid; grid-template-columns: 1fr 1fr; }
 .btn-block { width: 100%; }
 .find-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
 .find-list li { display: flex; gap: 10px; font-size: 13px; line-height: 1.45; align-items: flex-start; }
@@ -466,6 +467,38 @@ a.link:hover { color: var(--accent-2); }
 .chip:hover, .chip.active { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
 
 @media (max-width: 1080px) { .opp-grid { grid-template-columns: 1fr; } }
+
+/* Settings: logo & house style */
+.brand-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); }
+.logo-box { height: 72px; border: 1px dashed var(--border-strong); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; padding: 10px; }
+.logo-box img { max-height: 100%; max-width: 100%; }
+.logo-box .hint { color: #888; }
+@media (max-width: 760px) { .brand-row { grid-template-columns: 1fr; } }
+
+/* Settings: how-to and checkbox rows */
+.howto { margin-top: 16px; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--panel-2); }
+.howto summary { cursor: pointer; font-weight: 500; font-size: 13.5px; }
+.howto ol { margin: 12px 0 8px 18px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-2); }
+.howto code { display: block; margin-top: 4px; font-family: var(--mono); font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); user-select: all; }
+.check-row { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; font-size: 13.5px; }
+.check-row input { margin-top: 3px; }
+
+/* Client report card & screenshots */
+.report-status { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border); margin-bottom: 12px; font-size: 13px; }
+.report-status > i { color: var(--muted); margin-top: 3px; }
+.report-status.seen { background: var(--green-soft); border-color: rgba(34,197,94,.3); }
+.report-status.seen > i { color: var(--green); }
+.link-box { display: flex; gap: 4px; align-items: center; }
+.link-box input { height: 32px; font-size: 12px; font-family: var(--mono); color: var(--text-2); }
+.shot-grid { display: grid; grid-template-columns: 1fr 160px; gap: 14px; align-items: end; }
+.shot { display: block; position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-strong); background: #fff; }
+.shot img { display: block; width: 100%; object-fit: cover; object-position: top; }
+.shot.desktop img { aspect-ratio: 1366 / 860; }
+.shot.mobile { border-radius: 18px; border: 6px solid #000; }
+.shot.mobile img { aspect-ratio: 390 / 844; }
+.shot span { position: absolute; left: 8px; bottom: 8px; font-size: 11px; background: rgba(0,0,0,.7); color: #fff; padding: 2px 8px; border-radius: 999px; }
+@media (max-width: 760px) { .shot-grid { grid-template-columns: 1fr; } .shot.mobile { max-width: 200px; } }
+.viewed-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--green); }
 
 /* Next-steps stepper on the lead page */
 .steps { display: flex; flex-direction: column; }
