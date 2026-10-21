@@ -410,9 +410,89 @@
     .quote-card { display: block; transition: background .12s, border-color .12s; }
     .quote-card:hover { background: var(--panel-2); border-color: var(--border-strong); }
 
+    /* Document-style editing (quote + outreach) */
+    .doc-stack { max-width: 1040px; }
+    .form-grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    textarea.doc-text { font-size: 14.5px; line-height: 1.7; padding: 16px 18px; min-height: 130px; }
+    textarea.doc-text.tall { min-height: 380px; }
+    textarea.bare { border: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); background: transparent; box-shadow: none; resize: vertical; display: block; }
+    textarea.bare:focus { box-shadow: none; background: rgba(255,255,255,.015); }
+    .subject-input { height: 48px; font-size: 15px; font-weight: 500; padding: 0 18px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+    .subject-input:focus { box-shadow: none; background: rgba(255,255,255,.015); }
+    .msg-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+    .ai-badge { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-2); }
+    .opt-group { display: flex; flex-direction: column; gap: 6px; }
+    .opt-group > label { font-size: 12.5px; font-weight: 500; color: var(--text-2); }
+    .seg.full { display: flex; }
+    .seg.full button { flex: 1; justify-content: center; }
+    .btn-block { width: 100%; }
+    .find-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .find-list li { display: flex; gap: 10px; font-size: 13px; line-height: 1.45; align-items: flex-start; }
+    .find-list .dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+
+    /* Action list ("Needs attention") */
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 28px 0 12px; flex-wrap: wrap; }
+    .section-head h2 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .section-head h2 .n { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; }
+    .section-head p { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+    .opp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .opp { display: flex; flex-direction: column; gap: 14px; padding: 16px 18px; transition: border-color .12s; }
+    .opp:hover { border-color: var(--border-strong); }
+    .opp-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .opp-top .grow { flex: 1; min-width: 0; }
+    .opp-value { text-align: right; flex-shrink: 0; }
+    .opp-value .v { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .opp-value .l { font-size: 11px; color: var(--muted); }
+    .opp-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+    .ring.sm { width: 40px; height: 40px; }
+    .ring.sm .ring-inner { width: 32px; height: 32px; }
+    .ring.sm .ring-val { font-size: 12px; }
+    .rows { display: flex; flex-direction: column; }
+    .row-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .row-item:last-child { border-bottom: 0; }
+    .row-item .grow { flex: 1; min-width: 180px; }
+    .row-item .meta { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+    .row-actions-static { display: flex; gap: 6px; flex-wrap: wrap; }
+    .banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-top: 16px; flex-wrap: wrap; }
+    .banner .grow { flex: 1; font-size: 13px; color: var(--text-2); min-width: 200px; }
+    .overdue { color: var(--red) !important; }
+    a.link { color: var(--text); font-weight: 500; }
+    a.link:hover { color: var(--accent-2); }
+
+    /* Saved messages */
+    .msg { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .msg + .msg { border-top: 1px solid var(--border); }
+    .msg-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .msg-head .grow { flex: 1; min-width: 160px; }
+    .msg-subject { font-weight: 600; font-size: 13.5px; }
+    .msg-body { font-size: 13.5px; color: var(--text-2); line-height: 1.6; white-space: pre-wrap; }
+    .msg-body.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .msg-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .date-input { height: 28px; width: auto; font-size: 12.5px; padding: 0 8px; }
+    .group-label { font-size: 12px; font-weight: 600; color: var(--text-2); padding: 10px 18px; background: var(--panel-2); border-bottom: 1px solid var(--border); }
+    .group-label.overdue { color: var(--red); }
+    .group-label:first-child { border-radius: var(--r-lg) var(--r-lg) 0 0; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip { height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--panel-2); color: var(--text-2); font-size: 12.5px; cursor: pointer; }
+    .chip:hover, .chip.active { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+
+    @media (max-width: 1080px) { .opp-grid { grid-template-columns: 1fr; } }
+
+    /* Next-steps stepper on the lead page */
+    .steps { display: flex; flex-direction: column; }
+    .step { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 18px; background: none; border: 0; border-bottom: 1px solid var(--border); color: var(--text-2); font-size: 13.5px; text-align: left; cursor: pointer; transition: background .12s, color .12s; }
+    .step:last-child { border-bottom: 0; border-radius: 0 0 var(--r-lg) var(--r-lg); }
+    .step:hover { background: var(--panel-2); color: var(--text); }
+    .step .bullet { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; font-size: 11px; font-weight: 600; border: 1px solid var(--border-strong); color: var(--muted); }
+    .step.done .bullet { background: var(--green-soft); border-color: rgba(34,197,94,.3); color: var(--green); }
+    .step.current { color: var(--text); font-weight: 500; }
+    .step.current .bullet { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step .go { margin-left: auto; font-size: 11px; color: var(--muted); }
+
     /* ── Responsive ── */
     @media (max-width: 1080px) {
       .detail-grid { grid-template-columns: 1fr; }
+      .form-grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .stats { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 760px) {
@@ -427,7 +507,7 @@
       .quick .divider { display: none; }
       .quick .q-status { flex: 1 1 140px; }
       .search { width: 100%; }
-      .form-grid { grid-template-columns: 1fr; }
+      .form-grid, .form-grid.cols-4 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -449,7 +529,12 @@
     <a class="nav-item" id="nav-attention" href="#/attention">
       <i class="fa-solid fa-fire"></i>
       <span data-i18n="needsAttention">Needs attention</span>
-      <span class="nav-count hot" id="nav-count-attention">0</span>
+      <span class="nav-count hot" id="nav-count-attention"></span>
+    </a>
+    <a class="nav-item" id="nav-messages" href="#/messages">
+      <i class="fa-solid fa-paper-plane"></i>
+      <span data-i18n="messages">Messages</span>
+      <span class="nav-count hot" id="nav-count-messages"></span>
     </a>
 
     <div class="nav-label" data-i18n="general">General</div>
@@ -547,6 +632,15 @@
 
       <!-- Quote view -->
       <section id="view-quote" hidden></section>
+
+      <!-- Outreach view -->
+      <section id="view-outreach" hidden></section>
+
+      <!-- Needs attention (action list) -->
+      <section id="view-attention" hidden></section>
+
+      <!-- Saved messages -->
+      <section id="view-messages" hidden></section>
     </div>
   </main>
 </div>
@@ -596,6 +690,28 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeConfirm()" data-i18n="cancel"></button>
       <button class="btn btn-danger" id="confirm-ok" onclick="runConfirm()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Save message for later -->
+<div class="modal-backdrop" id="schedule" onclick="if (event.target === this) closeSchedule()">
+  <div class="modal" role="dialog" aria-modal="true" style="width:420px">
+    <div class="modal-head">
+      <div class="modal-title" data-i18n="scheduleTitle"></div>
+      <button class="icon-btn" onclick="closeSchedule()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p data-i18n="scheduleText"></p>
+      <div class="field">
+        <label for="schedule-date" data-i18n="sendOn"></label>
+        <input type="date" id="schedule-date" />
+      </div>
+      <div class="chips" id="schedule-chips"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSchedule()" data-i18n="cancel"></button>
+      <button class="btn btn-primary" onclick="confirmSchedule()"><i class="fa-regular fa-bookmark"></i><span data-i18n="saveForLater"></span></button>
     </div>
   </div>
 </div>
@@ -679,6 +795,63 @@
       noLines: 'No line items yet. Add one, or scan the site first.',
       setupBusiness: 'Your business details are still empty, so they won’t appear on the quote.', goSettings: 'Open settings',
       quoteFor: (d) => 'Quote for ' + d,
+      ai: 'AI assistant', aiDesc: 'Writes a first outreach message for you using the Claude API (Anthropic). Each message costs a few cents.',
+      sApiKey: 'Anthropic API key', apiKeySet: 'A key is saved. Enter a new one to replace it.',
+      apiKeyEnv: 'No key saved here, but one was found in the ANTHROPIC_API_KEY environment variable.',
+      apiKeyHint: 'Create one at console.anthropic.com → API keys. It is stored only in your local database.',
+      removeKey: 'Remove key', toastKeyRemoved: 'API key removed',
+      sWorkspace: 'Workspace ID (only if asked for)',
+      workspaceHint: 'Only needed for organisation-wide keys. Find it in console.anthropic.com → Settings → Workspaces (starts with wrkspc_).',
+      noWorkspace: 'Your API key isn’t tied to one workspace. Fill in the Workspace ID in Settings → AI assistant, or create a key inside a workspace.',
+      outreach: 'First outreach', writeOutreach: 'Write outreach', openOutreach: 'Open outreach',
+      outreachSub: 'A short, personal first message based on the scan — to start a conversation before you send a quote.',
+      channel: 'Channel', chEmail: 'Email', chLinkedin: 'LinkedIn', chPhone: 'Call script',
+      tone: 'Tone', toneFriendly: 'Friendly', toneProfessional: 'Professional', toneDirect: 'Direct',
+      length: 'Length', lenShort: 'Short', lenNormal: 'Normal', formality: 'Form of address',
+      extraInstr: 'Extra instructions (optional)', extraPh: 'E.g. mention that we are also based in Utrecht',
+      generateAi: 'Generate with AI', regenerate: 'Generate again', generating: 'Writing…', useTemplate: 'Use a template instead',
+      subject: 'Subject', subjectPh: 'Subject line', message: 'Message', script: 'Call script', options: 'Options',
+      outreachEmpty: 'No message yet', outreachEmptyHint: 'Pick the options on the right and let AI write a first version. You can edit everything afterwards.',
+      generatingTitle: 'Writing your message…', generatingHint: 'This usually takes 10–30 seconds.',
+      basedOn: 'Based on these findings', noFindingsOutreach: 'No issues found — the message will be a general introduction.',
+      notScannedOutreach: 'Scan the site first for a more personal message.',
+      copy: 'Copy', openMail: 'Open in email', markContacted: 'Mark as contacted',
+      wordsCount: (n) => n + ' words', aiBadge: 'Written by AI — check it before sending', templateBadge: 'Template',
+      toastCopiedMsg: 'Message copied', toastGenFail: 'Generating failed',
+      aiNotConfigured: 'AI isn’t set up yet. Add your Anthropic API key in Settings, or use a template.',
+      noKey: 'No valid Anthropic API key found. Add one in Settings, or use a template.',
+      replaceTitle: 'Replace message?', replaceText: 'Your current text will be replaced by a new version.', replaceOk: 'Replace',
+      nextSteps: 'Next steps', stepScan: 'Scan website', stepOutreach: 'First outreach', stepQuote: 'Send quote',
+      messages: 'Messages', messagesSub: 'Saved messages to send later. Mark them as sent once they’re out.',
+      tabPlanned: 'To send', tabSent: 'Sent',
+      grpOverdue: 'Overdue', grpToday: 'Today', grpTomorrow: 'Tomorrow', grpLater: 'Later', grpNoDate: 'No date',
+      saveForLater: 'Save for later', scheduleTitle: 'Save message for later',
+      scheduleText: 'Choose when you want to send it. You’ll find it under Messages, and it shows up in Needs attention on that day.',
+      sendOn: 'Send on', qToday: 'Today', qTomorrow: 'Tomorrow', qIn3: 'In 3 days', qNextWeek: 'Next Monday',
+      toastMsgSaved: 'Saved under Messages', markSent: 'Mark as sent', toastMsgSent: 'Marked as sent',
+      sentOn: (d) => 'Sent ' + d, plannedFor: (d) => 'Planned for ' + d,
+      showAll: 'Show all', showLess: 'Show less',
+      noMessages: 'No messages to send', noMessagesHint: 'Write a first outreach for a lead and choose “Save for later”.',
+      noSent: 'Nothing sent yet', noSentHint: 'Messages you mark as sent show up here.',
+      deleteMsgTitle: 'Delete message?', deleteMsgText: 'This saved message will be removed.',
+      savedMessages: 'Saved messages', followUp: 'Follow up', toastSaved: 'Saved',
+      kind: 'Type', kindFirst: 'First message', kindFollow: 'Follow-up',
+      daysAgo: (n) => n <= 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago',
+      attentionSub: 'Your to-do list: what to send today, who to approach, who to follow up.',
+      kpiReady: 'Ready to approach', kpiReadySub: 'scanned, with issues, not contacted',
+      kpiValue: 'Estimated value', kpiValueSub: 'of these opportunities, excl. VAT',
+      kpiFollow: 'To follow up', kpiFollowSub: (n) => 'no outcome after ' + n + '+ days',
+      kpiDue: 'Messages to send', kpiDueSub: 'planned for today or earlier',
+      secDue: 'Send today', secDueHint: 'Planned messages that are due.',
+      secReady: 'Ready to approach', secReadyHint: 'Sites with issues you haven’t contacted yet, most to gain first.',
+      secFollow: 'Follow up', secFollowHint: (n) => 'Contacted at least ' + n + ' days ago, still no outcome.',
+      secQuotes: 'Open quotes', secQuotesHint: 'Quote made, waiting for an answer.',
+      unscannedBanner: (n) => n + ' lead(s) not scanned yet — scan them to find new opportunities.',
+      notInterested: 'Not interested', interested: 'Interested', won: 'Won', lost: 'Lost', viewLead: 'View',
+      allDone: 'All caught up', allDoneHint: 'Nothing needs your attention right now. Add or scan new leads to find more opportunities.',
+      noReady: 'No new opportunities right now. Scan more leads to find sites with issues.',
+      followUpMsg: 'Write follow-up', contactedAgo: (s) => 'Contacted ' + s, dateUnknown: 'contact date unknown',
+      estimate: 'estimate', allMessages: 'All messages', quoteLabel: (n) => 'Quote ' + n, toastMsgDeleted: 'Message deleted', healthScoreShort: 'Health',
     },
     nl: {
       workspace: 'Werkruimte', allLeads: 'Alle leads', needsAttention: 'Aandacht nodig',
@@ -751,6 +924,63 @@
       noLines: 'Nog geen regels. Voeg er een toe of scan eerst de site.',
       setupBusiness: 'Je bedrijfsgegevens zijn nog leeg en komen dus niet op de offerte.', goSettings: 'Naar instellingen',
       quoteFor: (d) => 'Offerte voor ' + d,
+      ai: 'AI-assistent', aiDesc: 'Schrijft een eerste benadering voor je met de Claude API (Anthropic). Elk bericht kost een paar cent.',
+      sApiKey: 'Anthropic API-sleutel', apiKeySet: 'Er is een sleutel opgeslagen. Vul een nieuwe in om hem te vervangen.',
+      apiKeyEnv: 'Hier is geen sleutel opgeslagen, maar er is er een gevonden in de omgevingsvariabele ANTHROPIC_API_KEY.',
+      apiKeyHint: 'Maak er een aan via console.anthropic.com → API keys. Wordt alleen in je lokale database bewaard.',
+      removeKey: 'Sleutel verwijderen', toastKeyRemoved: 'API-sleutel verwijderd',
+      sWorkspace: 'Workspace-ID (alleen als erom gevraagd wordt)',
+      workspaceHint: 'Alleen nodig bij een sleutel voor de hele organisatie. Te vinden in console.anthropic.com → Settings → Workspaces (begint met wrkspc_).',
+      noWorkspace: 'Je API-sleutel is niet aan één workspace gekoppeld. Vul de Workspace-ID in bij Instellingen → AI-assistent, of maak een sleutel aan binnen een workspace.',
+      outreach: 'Eerste benadering', writeOutreach: 'Benadering schrijven', openOutreach: 'Benadering openen',
+      outreachSub: 'Een kort, persoonlijk eerste bericht op basis van de scan — om het gesprek te openen voordat je een offerte stuurt.',
+      channel: 'Kanaal', chEmail: 'E-mail', chLinkedin: 'LinkedIn', chPhone: 'Belscript',
+      tone: 'Toon', toneFriendly: 'Vriendelijk', toneProfessional: 'Zakelijk', toneDirect: 'Direct',
+      length: 'Lengte', lenShort: 'Kort', lenNormal: 'Normaal', formality: 'Aanspreekvorm',
+      extraInstr: 'Extra instructies (optioneel)', extraPh: 'Bijv. vermeld dat wij ook in Utrecht zitten',
+      generateAi: 'Genereer met AI', regenerate: 'Opnieuw genereren', generating: 'Schrijven…', useTemplate: 'Gebruik een sjabloon',
+      subject: 'Onderwerp', subjectPh: 'Onderwerpregel', message: 'Bericht', script: 'Belscript', options: 'Opties',
+      outreachEmpty: 'Nog geen bericht', outreachEmptyHint: 'Kies rechts de opties en laat AI een eerste versie schrijven. Daarna kun je alles aanpassen.',
+      generatingTitle: 'Je bericht wordt geschreven…', generatingHint: 'Dit duurt meestal 10–30 seconden.',
+      basedOn: 'Gebaseerd op deze bevindingen', noFindingsOutreach: 'Geen problemen gevonden — het bericht wordt een algemene kennismaking.',
+      notScannedOutreach: 'Scan de site eerst voor een persoonlijker bericht.',
+      copy: 'Kopiëren', openMail: 'Openen in e-mail', markContacted: 'Markeer als gecontacteerd',
+      wordsCount: (n) => n + ' woorden', aiBadge: 'Geschreven door AI — controleer voor verzenden', templateBadge: 'Sjabloon',
+      toastCopiedMsg: 'Bericht gekopieerd', toastGenFail: 'Genereren mislukt',
+      aiNotConfigured: 'AI is nog niet ingesteld. Voeg je Anthropic API-sleutel toe bij Instellingen, of gebruik een sjabloon.',
+      noKey: 'Geen geldige Anthropic API-sleutel gevonden. Voeg er een toe bij Instellingen, of gebruik een sjabloon.',
+      replaceTitle: 'Bericht vervangen?', replaceText: 'Je huidige tekst wordt vervangen door een nieuwe versie.', replaceOk: 'Vervangen',
+      nextSteps: 'Volgende stappen', stepScan: 'Website scannen', stepOutreach: 'Eerste benadering', stepQuote: 'Offerte sturen',
+      messages: 'Berichten', messagesSub: 'Opgeslagen berichten om later te versturen. Markeer ze als verzonden zodra ze de deur uit zijn.',
+      tabPlanned: 'Te versturen', tabSent: 'Verzonden',
+      grpOverdue: 'Achterstallig', grpToday: 'Vandaag', grpTomorrow: 'Morgen', grpLater: 'Later', grpNoDate: 'Geen datum',
+      saveForLater: 'Opslaan voor later', scheduleTitle: 'Bericht opslaan voor later',
+      scheduleText: 'Kies wanneer je het wilt versturen. Je vindt het terug onder Berichten, en op die dag verschijnt het bij Aandacht nodig.',
+      sendOn: 'Versturen op', qToday: 'Vandaag', qTomorrow: 'Morgen', qIn3: 'Over 3 dagen', qNextWeek: 'Volgende maandag',
+      toastMsgSaved: 'Opgeslagen onder Berichten', markSent: 'Markeer als verzonden', toastMsgSent: 'Gemarkeerd als verzonden',
+      sentOn: (d) => 'Verzonden op ' + d, plannedFor: (d) => 'Gepland voor ' + d,
+      showAll: 'Toon alles', showLess: 'Minder tonen',
+      noMessages: 'Geen berichten te versturen', noMessagesHint: 'Schrijf een eerste benadering voor een lead en kies “Opslaan voor later”.',
+      noSent: 'Nog niets verzonden', noSentHint: 'Berichten die je als verzonden markeert, verschijnen hier.',
+      deleteMsgTitle: 'Bericht verwijderen?', deleteMsgText: 'Dit opgeslagen bericht wordt verwijderd.',
+      savedMessages: 'Opgeslagen berichten', followUp: 'Opvolgen', toastSaved: 'Opgeslagen',
+      kind: 'Soort', kindFirst: 'Eerste bericht', kindFollow: 'Opvolging',
+      daysAgo: (n) => n <= 0 ? 'vandaag' : n === 1 ? 'gisteren' : n + ' dagen geleden',
+      attentionSub: 'Je actielijst: wat je vandaag verstuurt, wie je benadert en wie je opvolgt.',
+      kpiReady: 'Klaar om te benaderen', kpiReadySub: 'gescand, met problemen, nog niet benaderd',
+      kpiValue: 'Geschatte waarde', kpiValueSub: 'van deze kansen, excl. btw',
+      kpiFollow: 'Op te volgen', kpiFollowSub: (n) => 'geen uitkomst na ' + n + '+ dagen',
+      kpiDue: 'Berichten te versturen', kpiDueSub: 'gepland voor vandaag of eerder',
+      secDue: 'Vandaag versturen', secDueHint: 'Geplande berichten die verstuurd moeten worden.',
+      secReady: 'Klaar om te benaderen', secReadyHint: 'Sites met problemen die je nog niet benaderd hebt, meeste te winnen eerst.',
+      secFollow: 'Opvolgen', secFollowHint: (n) => 'Minstens ' + n + ' dagen geleden benaderd, nog geen uitkomst.',
+      secQuotes: 'Openstaande offertes', secQuotesHint: 'Offerte gemaakt, wacht op antwoord.',
+      unscannedBanner: (n) => n + ' lead(s) nog niet gescand — scan ze om nieuwe kansen te vinden.',
+      notInterested: 'Geen interesse', interested: 'Interesse', won: 'Gewonnen', lost: 'Verloren', viewLead: 'Bekijken',
+      allDone: 'Alles bijgewerkt', allDoneHint: 'Er vraagt nu niets je aandacht. Voeg nieuwe leads toe of scan ze om meer kansen te vinden.',
+      noReady: 'Nu geen nieuwe kansen. Scan meer leads om sites met problemen te vinden.',
+      followUpMsg: 'Opvolgbericht schrijven', contactedAgo: (s) => 'Benaderd ' + s, dateUnknown: 'contactdatum onbekend',
+      estimate: 'schatting', allMessages: 'Alle berichten', quoteLabel: (n) => 'Offerte ' + n, toastMsgDeleted: 'Bericht verwijderd', healthScoreShort: 'Gezondheid',
     },
   };
 
@@ -816,7 +1046,7 @@
   let leads = [];
   let loaded = false;
   let statusFilter = 'all';
-  let attentionOnly = false;
+  let messages = [];
   let view = 'list';
   let currentId = null;
   let sevFilter = 'all';
@@ -835,8 +1065,9 @@
 
   // ── API ──
   async function apiLoad() {
-    const res = await fetch('/api/leads');
-    leads = await res.json();
+    const [leadsRes, msgRes] = await Promise.all([fetch('/api/leads'), fetch('/api/messages')]);
+    leads = await leadsRes.json();
+    messages = msgRes.ok ? await msgRes.json() : [];
     loaded = true;
     render();
   }
@@ -894,11 +1125,12 @@
   // ── Router ──
   function route() {
     flushQuoteSave();
+    flushOutreachSave();
     const h = location.hash || '#/';
     const prevView = view, prevId = currentId;
     let m;
-    if ((m = h.match(/^#\/lead\/([^/]+)\/quote$/))) {
-      view = 'quote';
+    if ((m = h.match(/^#\/lead\/([^/]+)\/(quote|outreach)$/))) {
+      view = m[2];
       currentId = decodeURIComponent(m[1]);
     } else if ((m = h.match(/^#\/lead\/([^/]+)$/))) {
       view = 'detail';
@@ -908,10 +1140,12 @@
       view = 'settings';
       currentId = null;
       if (prevView !== 'settings') settingsBuilt = false;
+    } else if (h === '#/attention' || h === '#/messages') {
+      view = h.slice(2);
+      currentId = null;
     } else {
       view = 'list';
       currentId = null;
-      attentionOnly = h === '#/attention';
     }
     // Leaving settings with unsaved edits: save them instead of losing them
     if (prevView === 'settings' && view !== 'settings' && settingsDirty) saveSettings();
@@ -923,35 +1157,39 @@
 
   // ── Render ──
   function render() {
-    for (const v of ['list', 'detail', 'settings', 'quote']) $('view-' + v).hidden = view !== v;
+    for (const v of ['list', 'detail', 'settings', 'quote', 'outreach', 'attention', 'messages']) $('view-' + v).hidden = view !== v;
 
+    const a = attentionData();
+    const attentionCount = a.ready.length + a.followUp.length + a.due.length;
     $('nav-count-all').textContent = leads.length;
-    $('nav-count-attention').textContent = leads.filter(hasIssues).length;
-    $('nav-all').classList.toggle('active', view === 'list' && !attentionOnly);
-    $('nav-attention').classList.toggle('active', view === 'list' && attentionOnly);
+    $('nav-count-attention').textContent = attentionCount || '';
+    $('nav-count-messages').textContent = a.due.length || '';
+    $('nav-all').classList.toggle('active', view === 'list');
+    $('nav-attention').classList.toggle('active', view === 'attention');
+    $('nav-messages').classList.toggle('active', view === 'messages');
     $('nav-settings').classList.toggle('active', view === 'settings');
 
     renderCrumbs();
     if (view === 'list') renderList();
+    else if (view === 'attention') renderAttention(a);
+    else if (view === 'messages') renderMessages();
     else if (view === 'detail') renderDetail();
     else if (view === 'settings') renderSettings();
+    else if (view === 'outreach') renderOutreach();
     else renderQuote();
   }
 
   function renderCrumbs() {
     const sep = '<i class="fa-solid fa-chevron-right sep"></i>';
-    if (view === 'list') {
-      $('crumbs').innerHTML = '<span class="current">' + esc(attentionOnly ? t('needsAttention') : t('allLeads')) + '</span>';
-      return;
-    }
-    if (view === 'settings') {
-      $('crumbs').innerHTML = '<span class="current">' + esc(t('settings')) + '</span>';
+    const top = { list: 'allLeads', attention: 'needsAttention', messages: 'messages', settings: 'settings' };
+    if (top[view]) {
+      $('crumbs').innerHTML = '<span class="current">' + esc(t(top[view])) + '</span>';
       return;
     }
     const l = currentLead();
     const d = esc(l ? domain(l.url) : '');
     let html = '<a href="#/">' + esc(t('allLeads')) + '</a>' + sep;
-    if (view === 'quote') html += '<a href="#/lead/' + encodeURIComponent(currentId) + '">' + d + '</a>' + sep + '<span class="current">' + esc(t('quote')) + '</span>';
+    if (view === 'quote' || view === 'outreach') html += '<a href="#/lead/' + encodeURIComponent(currentId) + '">' + d + '</a>' + sep + '<span class="current">' + esc(t(view)) + '</span>';
     else html += '<span class="current">' + d + '</span>';
     $('crumbs').innerHTML = html;
   }
@@ -977,7 +1215,7 @@
   }
 
   function renderStatusSeg() {
-    const base = attentionOnly ? leads.filter(hasIssues) : leads;
+    const base = leads;
     const opts = [['all', t('all')], ['new', t('statusNew')], ['contacted', t('statusContacted')], ['qualified', t('statusQualified')], ['rejected', t('statusRejected')]];
     $('status-seg').innerHTML = opts.map(([k, label]) => {
       const n = k === 'all' ? base.length : base.filter(l => l.status === k).length;
@@ -1021,8 +1259,8 @@
   }
 
   function renderList() {
-    $('list-title').textContent = attentionOnly ? t('needsAttention') : t('allLeads');
-    $('list-sub').textContent = attentionOnly ? t('attentionSubtitle') : t('pageSubtitle');
+    $('list-title').textContent = t('allLeads');
+    $('list-sub').textContent = t('pageSubtitle');
     $('btn-scan-all').disabled = scanAllRunning;
 
     renderStats();
@@ -1030,7 +1268,6 @@
 
     const query = $('search-input').value.toLowerCase().trim();
     const visible = leads.filter(l => {
-      if (attentionOnly && !hasIssues(l)) return false;
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (query && !(l.url + ' ' + l.name + ' ' + l.notes).toLowerCase().includes(query)) return false;
       return true;
@@ -1042,8 +1279,7 @@
 
     if (!visible.length) {
       let icon = 'fa-plus', title = t('noLeads'), hint = t('noLeadsHint');
-      if (leads.length && attentionOnly && !query && statusFilter === 'all') { icon = 'fa-fire'; title = t('noAttention'); hint = t('noAttentionHint'); }
-      else if (leads.length) { icon = 'fa-magnifying-glass'; title = t('noMatch'); hint = t('noMatchHint'); }
+      if (leads.length) { icon = 'fa-magnifying-glass'; title = t('noMatch'); hint = t('noMatchHint'); }
       empty.hidden = !loaded;
       empty.innerHTML = '<div class="empty-icon"><i class="fa-solid ' + icon + '"></i></div><h3>' + esc(title) + '</h3><p>' + esc(hint) + '</p>';
       tbody.innerHTML = '';
@@ -1104,20 +1340,23 @@
     const findings = st === 'done' ? sr.findings : [];
     const c = countFindings(findings);
     const busy = st === 'scanning';
+    const nextStep = nextStepFor(l);
 
     // Hero
     let html = '<div class="hero fade-in"><div class="hero-left">' + favicon(l.url, true) + '<div style="min-width:0">' +
       '<h1 class="hero-title">' + esc(domain(l.url)) + badge(l.status) + '</h1>' +
       '<div class="hero-meta"><a href="' + esc(l.url) + '" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>' + esc(l.url) + '</a>' +
       (l.name ? '<span><i class="fa-solid fa-building"></i>' + esc(l.name) + '</span>' : '') + '</div></div></div>' +
-      '<div class="head-actions">' +
+      '<div class="head-actions" style="align-items:center">' +
         '<button class="icon-btn danger" title="' + esc(t('delete')) + '" onclick="askDelete(\'' + id + '\')"><i class="fa-solid fa-trash-can"></i></button>' +
-        '<button class="btn btn-secondary" onclick="openEdit(\'' + id + '\')"><i class="fa-solid fa-pen"></i>' + esc(t('edit')) + '</button>' +
-        (st === 'done' ? '<button class="btn btn-secondary" onclick="copyReport()"><i class="fa-regular fa-copy"></i>' + esc(t('copyReport')) + '</button>' +
-                         '<button class="btn btn-secondary" onclick="downloadPdf()"><i class="fa-solid fa-file-pdf"></i>' + esc(t('downloadPdf')) + '</button>' : '') +
-        '<button class="btn ' + (st === 'done' ? 'btn-secondary' : 'btn-primary') + '" onclick="scanLead(\'' + id + '\')"' + (busy ? ' disabled' : '') + '>' +
+        '<button class="icon-btn" title="' + esc(t('edit')) + '" onclick="openEdit(\'' + id + '\')"><i class="fa-solid fa-pen"></i></button>' +
+        (st === 'done' ? '<button class="icon-btn" title="' + esc(t('copyReport')) + '" onclick="copyReport()"><i class="fa-regular fa-copy"></i></button>' +
+                         '<button class="icon-btn" title="' + esc(t('downloadPdf')) + '" onclick="downloadPdf()"><i class="fa-solid fa-file-pdf"></i></button>' : '') +
+        '<button class="btn ' + (nextStep === 'scan' ? 'btn-primary' : 'btn-secondary') + '" onclick="scanLead(\'' + id + '\')"' + (busy ? ' disabled' : '') + '>' +
           (busy ? '<span class="spin"></span>' + esc(t('scanning')) : '<i class="fa-solid fa-rotate"></i>' + esc(st === 'none' ? t('scanNow') : t('rescan'))) + '</button>' +
-        '<a class="btn ' + (st === 'done' ? 'btn-primary' : 'btn-secondary') + '" href="#/lead/' + encodeURIComponent(l.id) + '/quote"><i class="fa-solid fa-file-invoice"></i>' +
+        '<a class="btn ' + (nextStep === 'outreach' ? 'btn-primary' : 'btn-secondary') + '" href="#/lead/' + encodeURIComponent(l.id) + '/outreach"><i class="fa-solid fa-wand-magic-sparkles"></i>' +
+          esc(outreachDone(l) ? t('openOutreach') : t('writeOutreach')) + '</a>' +
+        '<a class="btn ' + (nextStep === 'quote' ? 'btn-primary' : 'btn-secondary') + '" href="#/lead/' + encodeURIComponent(l.id) + '/quote"><i class="fa-solid fa-file-invoice"></i>' +
           esc(l.quote ? t('openQuote') : t('createQuote')) + '</a>' +
       '</div></div>';
 
@@ -1180,7 +1419,7 @@
     const statusOpts = ['new', 'contacted', 'qualified', 'rejected'].map(s =>
       '<option value="' + s + '"' + (l.status === s ? ' selected' : '') + '>' + esc(t('status' + s[0].toUpperCase() + s.slice(1))) + '</option>').join('');
 
-    let side = quoteCard(l) + '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +
+    let side = stepsCard(l) + quoteCard(l) + '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +
       kvRow(t('status'), '<select onchange="setStatus(\'' + id + '\', this.value)">' + statusOpts + '</select>') +
       kvRow(t('company'), l.name ? esc(l.name) : '<span class="dash">—</span>') +
       kvRow(t('added'), esc(fmtDate(l.created))) +
@@ -1289,7 +1528,8 @@
     openConfirm(t('deleteTitle'), t('deleteText', domain(l.url)), t('delete'), true, async () => {
       await apiDelete(id);
       if (quoteLeadId === id) { quoteDraft = null; quoteLeadId = null; }
-      if ((view === 'detail' || view === 'quote') && currentId === id) location.hash = '#/';
+      if (outreachLeadId === id) { clearTimeout(outreachSaveTimer); outreachPending = null; outreachDraft = null; outreachLeadId = null; }
+      if (['detail', 'quote', 'outreach'].includes(view) && currentId === id) location.hash = '#/';
       await apiLoad();
       toast(t('toastRemoved'), '');
     });
@@ -1347,7 +1587,7 @@
 
   // ── Keyboard ──
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeConfirm(); return; }
+    if (e.key === 'Escape') { closeModal(); closeConfirm(); closeSchedule(); return; }
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (e.key === '/' && !typing && view === 'list') { e.preventDefault(); $('search-input').focus(); }
     if (e.key === 'Enter' && $('modal').classList.contains('open') && document.activeElement.tagName === 'INPUT') saveModal();
@@ -1808,6 +2048,12 @@
           field('introText', t('sIntro'), { textarea: true, rows: 4, full: true, ph: t('defaultIntro') }) +
           field('termsText', t('sTerms'), { textarea: true, rows: 4, full: true, ph: t('defaultTerms') }) +
           '</div>') +
+        section(t('ai'), t('aiDesc'),
+          '<div class="field"><label for="set-apiKey">' + esc(t('sApiKey')) + '</label>' +
+          '<input id="set-apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="' + (s.anthropicApiKeySet ? '••••••••••••' : 'sk-ant-…') + '" oninput="markDirty()">' +
+          '<div class="hint">' + esc(s.anthropicApiKeySet ? t('apiKeySet') : s.aiConfigured ? t('apiKeyEnv') : t('apiKeyHint')) + '</div></div>' +
+          '<div style="margin-top:14px">' + field('anthropicWorkspaceId', t('sWorkspace'), { ph: 'wrkspc_…', hint: t('workspaceHint') }) + '</div>' +
+          (s.anthropicApiKeySet ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="removeApiKey()"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button></div>' : '')) +
         '<div style="display:flex;justify-content:flex-end">' + saveBtn + '</div>' +
       '</div></div>';
 
@@ -1841,11 +2087,27 @@
     document.querySelectorAll('[data-hidx]').forEach(el => {
       settings.hours[SERVICE_DEFS[el.dataset.hidx].tech] = parseFloat(el.value) || 0;
     });
+    const keyEl = $('set-apiKey');
+    const newKey = keyEl ? keyEl.value.trim() : '';
     settingsDirty = false;
     const d = $('settings-dirty');
     if (d) d.hidden = true;
-    await apiSaveSettings();
+    // The key is only sent when a new one was typed; the server never sends it back.
+    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newKey ? { ...settings, anthropicApiKey: newKey } : settings) });
+    if (newKey) {
+      await apiLoadSettings();
+      if (view === 'settings') render();
+    }
     toast(t('toastSettingsSaved'), 'success');
+  }
+
+  async function removeApiKey() {
+    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ anthropicApiKey: null }) });
+    settingsDirty = false;
+    await apiLoadSettings();
+    render();
+    toast(t('toastKeyRemoved'), '');
   }
 
   // ── Quotes ──
@@ -1970,6 +2232,803 @@
     };
   }
 
+  // ── Pipeline: scan → first outreach → quote ──
+  function outreachDone(l) {
+    return Boolean((l.outreach && l.outreach.body && l.outreach.body.trim()) || messages.some(m => m.leadId === l.id));
+  }
+
+  function nextStepFor(l) {
+    if (scanState(l) !== 'done') return 'scan';
+    if (!outreachDone(l) && l.status === 'new') return 'outreach';
+    return 'quote';
+  }
+
+  function stepsCard(l) {
+    const id = encodeURIComponent(l.id);
+    const next = nextStepFor(l);
+    const steps = [
+      { key: 'scan', label: t('stepScan'), done: scanState(l) === 'done', action: scanState(l) === 'done' ? '' : 'onclick="scanLead(\'' + esc(l.id) + '\')"' },
+      { key: 'outreach', label: t('stepOutreach'), done: outreachDone(l) || l.status !== 'new', action: 'onclick="location.hash=\'#/lead/' + id + '/outreach\'"' },
+      { key: 'quote', label: t('stepQuote'), done: Boolean(l.quote), action: 'onclick="location.hash=\'#/lead/' + id + '/quote\'"' },
+    ];
+    return '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('nextSteps')) + '</div></div><div class="steps">' +
+      steps.map((s, i) => {
+        const current = s.key === next && !s.done;
+        return '<button class="step' + (s.done ? ' done' : '') + (current ? ' current' : '') + '" ' + s.action + '>' +
+          '<span class="bullet">' + (s.done ? '<i class="fa-solid fa-check"></i>' : i + 1) + '</span>' + esc(s.label) +
+          '<i class="fa-solid fa-chevron-right go"></i></button>';
+      }).join('') + '</div></div>';
+  }
+
+  // ── First outreach ──
+  let outreachDraft = null;
+  let outreachLeadId = null;
+  let outreachGeneratingId = null;
+  let outreachError = null;
+  let outreachSaveTimer = null;
+  let outreachPending = null;
+  let outreachSaveState = 'saved';
+
+  function defaultOutreach() {
+    return { channel: 'email', tone: 'friendly', length: 'normal', formality: 'u', extra: '', subject: '', body: '', source: null, kind: 'first' };
+  }
+
+  function stateHtml(s) {
+    return s === 'saving' ? '<span class="spin"></span>' + esc(t('saving')) : '<i class="fa-solid fa-check"></i>' + esc(t('saved'));
+  }
+
+  async function saveOutreachNow(leadId, d) {
+    d.updated = Date.now();
+    await fetch('/api/outreach/' + encodeURIComponent(leadId), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+    const l = leads.find(x => x.id === leadId);
+    if (l) l.outreach = JSON.parse(JSON.stringify(d));
+  }
+
+  function setOutreachSaveState(s) {
+    outreachSaveState = s;
+    const el = $('o-save-state');
+    if (el) el.innerHTML = stateHtml(s);
+  }
+
+  function scheduleOutreachSave() {
+    const leadId = outreachLeadId, d = outreachDraft;
+    setOutreachSaveState('saving');
+    clearTimeout(outreachSaveTimer);
+    outreachPending = async () => {
+      outreachPending = null;
+      await saveOutreachNow(leadId, d);
+      setOutreachSaveState('saved');
+    };
+    outreachSaveTimer = setTimeout(() => outreachPending && outreachPending(), 600);
+  }
+
+  async function flushOutreachSave() {
+    clearTimeout(outreachSaveTimer);
+    if (outreachPending) await outreachPending();
+  }
+
+  function wordCount(s) {
+    return (String(s || '').trim().match(/\S+/g) || []).length;
+  }
+
+  function renderOutreach() {
+    const el = $('view-outreach');
+    const l = currentLead();
+    if (!l) {
+      el.innerHTML = loaded
+        ? '<div class="card empty fade-in"><div class="empty-icon"><i class="fa-solid fa-ghost"></i></div><h3>' + esc(t('notFound')) + '</h3><p>' + esc(t('notFoundHint')) + '</p>' +
+          '<a class="btn btn-secondary" href="#/"><i class="fa-solid fa-arrow-left"></i>' + esc(t('backToLeads')) + '</a></div>'
+        : '';
+      return;
+    }
+    if (outreachLeadId !== l.id) {
+      outreachDraft = { ...defaultOutreach(), ...(l.outreach ? JSON.parse(JSON.stringify(l.outreach)) : {}) };
+      // Already sent something before? Then the next message is a follow-up by default.
+      if (!l.outreach || !l.outreach.kind) outreachDraft.kind = lastSent(l.id) ? 'followup' : 'first';
+      outreachLeadId = l.id;
+      outreachError = null;
+    }
+
+    const d = outreachDraft;
+    const restore = captureFocus();
+    const st = scanState(l);
+    const findings = st === 'done' ? l.scanResult.findings.filter(f => f.severity !== 'info') : [];
+    const generating = outreachGeneratingId === l.id;
+    const hasBody = Boolean(d.body && d.body.trim());
+
+    let html = '<div class="hero fade-in"><div class="hero-left">' + favicon(l.url, true) + '<div style="min-width:0">' +
+      '<h1 class="hero-title">' + esc(t('outreach')) + '</h1>' +
+      '<div class="hero-meta"><span><i class="fa-solid fa-building"></i>' + esc(l.name || domain(l.url)) + '</span>' + badge(l.status) + '</div></div></div>' +
+      '<div class="head-actions" style="align-items:center">' +
+        '<span class="save-state" id="o-save-state">' + stateHtml(outreachSaveState) + '</span>' +
+        (hasBody ? '<button class="btn btn-secondary" onclick="copyOutreach()"><i class="fa-regular fa-copy"></i>' + esc(t('copy')) + '</button>' : '') +
+        (hasBody && d.channel === 'email' ? '<button class="btn btn-secondary" onclick="openOutreachMail()"><i class="fa-regular fa-envelope"></i>' + esc(t('openMail')) + '</button>' : '') +
+        (hasBody
+          ? '<button class="btn btn-secondary" onclick="openSchedule()"><i class="fa-regular fa-bookmark"></i>' + esc(t('saveForLater')) + '</button>' +
+            '<button class="btn btn-primary" onclick="sendDraftNow()"><i class="fa-solid fa-paper-plane"></i>' + esc(t('markSent')) + '</button>'
+          : '<a class="btn btn-secondary" href="#/lead/' + encodeURIComponent(l.id) + '/quote"><i class="fa-solid fa-file-invoice"></i>' + esc(l.quote ? t('openQuote') : t('createQuote')) + '</a>') +
+      '</div></div>';
+
+    html += '<p class="page-sub" style="margin:-12px 0 20px">' + esc(t('outreachSub')) + '</p>';
+
+    if (!settings.aiConfigured) {
+      html += '<div class="alert info"><i class="fa-solid fa-circle-info"></i><div style="flex:1">' + esc(t('aiNotConfigured')) + '</div>' +
+        '<a class="btn btn-secondary btn-sm" href="#/settings">' + esc(t('goSettings')) + '</a></div>';
+    }
+    if (outreachError) {
+      html += '<div class="alert err" style="margin-bottom:16px"><i class="fa-solid fa-circle-exclamation" style="margin-top:3px"></i><div>' + esc(outreachError) + '</div></div>';
+    }
+
+    // Main: the message
+    let main;
+    if (generating) {
+      main = '<div class="card"><div class="summary"><div class="empty-icon" style="margin:0;color:var(--accent-2)"><span class="spin lg"></span></div>' +
+        '<div class="summary-text"><div class="h">' + esc(t('generatingTitle')) + '</div><div class="s">' + esc(t('generatingHint')) + '</div></div></div>' +
+        '<div class="card-body" style="display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--border)">' +
+        [92, 78, 85, 60, 70].map(w => '<div class="skel" style="width:' + w + '%"></div>').join('') + '</div></div>';
+    } else if (!hasBody) {
+      main = '<div class="card empty"><div class="empty-icon" style="color:var(--accent-2)"><i class="fa-solid fa-wand-magic-sparkles"></i></div>' +
+        '<h3>' + esc(t('outreachEmpty')) + '</h3><p>' + esc(t('outreachEmptyHint')) + '</p>' +
+        '<button class="btn btn-primary" onclick="generateOutreach()"><i class="fa-solid fa-wand-magic-sparkles"></i>' + esc(t('generateAi')) + '</button></div>';
+    } else {
+      main = '<div class="card"><div class="card-head"><div class="card-title">' + esc(d.channel === 'phone' ? t('script') : t('message')) + '</div></div>' +
+        (d.channel === 'email' ? '<input class="subject-input" id="o-subject" placeholder="' + esc(t('subjectPh')) + '" value="' + esc(d.subject) + '" oninput="oText(\'subject\', this.value)">' : '') +
+        '<textarea class="doc-text tall bare" id="o-body" oninput="oText(\'body\', this.value)">' + esc(d.body) + '</textarea>' +
+        '<div class="msg-foot"><span>' + (d.source === 'ai' ? '<span class="ai-badge"><i class="fa-solid fa-wand-magic-sparkles"></i>' + esc(t('aiBadge')) + '</span>'
+                                                         : d.source === 'template' ? esc(t('templateBadge')) : '') + '</span>' +
+        '<span id="o-words">' + esc(t('wordsCount', wordCount(d.body))) + '</span></div></div>';
+    }
+
+    // Side: options + what the message is based on
+    const seg = (key, opts) => '<div class="seg full">' + opts.map(([v, label]) =>
+      '<button class="' + (d[key] === v ? 'active' : '') + '" onclick="oSet(\'' + key + '\', \'' + v + '\')">' + esc(label) + '</button>').join('') + '</div>';
+    const group = (label, ctl) => '<div class="opt-group"><label>' + esc(label) + '</label>' + ctl + '</div>';
+
+    let side = '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('options')) + '</div></div>' +
+      '<div class="card-body" style="display:flex;flex-direction:column;gap:14px">' +
+        (lastSent(l.id) ? group(t('kind'), seg('kind', [['first', t('kindFirst')], ['followup', t('kindFollow')]])) : '') +
+        group(t('channel'), seg('channel',[['email', t('chEmail')], ['linkedin', t('chLinkedin')], ['phone', t('chPhone')]])) +
+        group(t('tone'), seg('tone', [['friendly', t('toneFriendly')], ['professional', t('toneProfessional')], ['direct', t('toneDirect')]])) +
+        group(t('length'), seg('length', [['short', t('lenShort')], ['normal', t('lenNormal')]])) +
+        (lang === 'nl' ? group(t('formality'), seg('formality', [['u', 'u'], ['je', 'je']])) : '') +
+        group(t('extraInstr'), '<textarea id="o-extra" rows="3" placeholder="' + esc(t('extraPh')) + '" oninput="oText(\'extra\', this.value)">' + esc(d.extra) + '</textarea>') +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+          '<button class="btn btn-primary btn-block" onclick="generateOutreach()"' + (generating ? ' disabled' : '') + '>' +
+            (generating ? '<span class="spin"></span>' + esc(t('generating')) : '<i class="fa-solid fa-wand-magic-sparkles"></i>' + esc(hasBody ? t('regenerate') : t('generateAi'))) + '</button>' +
+          '<button class="btn btn-ghost btn-sm btn-block" onclick="useTemplate()"' + (generating ? ' disabled' : '') + '>' + esc(t('useTemplate')) + '</button>' +
+        '</div>' +
+      '</div></div>';
+
+    const sevColor = { critical: 'var(--red)', warning: 'var(--amber)' };
+    side += '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('basedOn')) + '</div></div><div class="card-body">' +
+      (st !== 'done' ? '<div class="muted-note">' + esc(t('notScannedOutreach')) + '</div>'
+        : findings.length ? '<ul class="find-list">' + findings.map(f => '<li><span class="dot" style="background:' + sevColor[f.severity] + '"></span><span>' + esc(findingText(f, lang).title) + '</span></li>').join('') + '</ul>'
+        : '<div class="muted-note">' + esc(t('noFindingsOutreach')) + '</div>') +
+      '</div></div>';
+
+    const mine = messages.filter(m => m.leadId === l.id).sort((a, b) => (b.sentAt || b.created) - (a.sentAt || a.created));
+    if (mine.length) {
+      side += '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('savedMessages')) + ' <span class="n">' + mine.length + '</span></div>' +
+        '<a class="btn btn-ghost btn-sm" href="#/messages">' + esc(t('allMessages')) + '</a></div><div class="rows">' +
+        mine.slice(0, 5).map(m => '<div class="row-item" style="padding:10px 18px"><div class="grow" style="min-width:0">' +
+          '<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(m.subject || m.body.split('\n')[0]) + '</div>' +
+          '<div class="meta">' + channelIcon(m.channel) + ' ' + esc(msgWhen(m)) + '</div></div></div>').join('') +
+        '</div></div>';
+    }
+
+    el.innerHTML = html + '<div class="detail-grid"><div class="stack">' + main + '</div><div class="stack">' + side + '</div></div>';
+    restore();
+  }
+
+  function oSet(key, value) {
+    if (!outreachDraft) return;
+    outreachDraft[key] = value;
+    renderOutreach();
+    scheduleOutreachSave();
+  }
+
+  function oText(key, value) {
+    if (!outreachDraft) return;
+    outreachDraft[key] = value;
+    if (key === 'body') {
+      const w = $('o-words');
+      if (w) w.textContent = t('wordsCount', wordCount(value));
+    }
+    scheduleOutreachSave();
+  }
+
+  function confirmReplace(fn) {
+    if (outreachDraft && outreachDraft.body && outreachDraft.body.trim()) openConfirm(t('replaceTitle'), t('replaceText'), t('replaceOk'), false, fn);
+    else fn();
+  }
+
+  function generateOutreach() {
+    if (outreachGeneratingId) return;
+    confirmReplace(runGenerateOutreach);
+  }
+
+  async function runGenerateOutreach() {
+    const leadId = outreachLeadId, d = outreachDraft;
+    if (!leadId || !d) return;
+    outreachGeneratingId = leadId;
+    outreachError = null;
+    render();
+    try {
+      const res = await fetch('/api/outreach/' + encodeURIComponent(leadId) + '/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel: d.channel, tone: d.tone, length: d.length, formality: d.formality, extra: d.extra, language: lang,
+          followUp: followUpContext(leadId, d),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        outreachError = data.error === 'no_key' ? t('noKey') : data.error === 'no_workspace' ? t('noWorkspace') : (data.error || t('toastGenFail'));
+      } else {
+        d.subject = d.channel === 'email' ? data.subject : '';
+        d.body = data.body;
+        d.source = 'ai';
+        await saveOutreachNow(leadId, d);
+      }
+    } catch {
+      outreachError = t('toastGenFail');
+    }
+    outreachGeneratingId = null;
+    render();
+  }
+
+  function useTemplate() {
+    const l = currentLead();
+    if (!l || !outreachDraft) return;
+    confirmReplace(() => {
+      const tpl = templateOutreach(l, outreachDraft);
+      outreachDraft.subject = tpl.subject;
+      outreachDraft.body = tpl.body;
+      outreachDraft.source = 'template';
+      outreachError = null;
+      renderOutreach();
+      scheduleOutreachSave();
+    });
+  }
+
+  // Simple fill-in-the-blanks version for when there's no AI key
+  function templateOutreach(l, d) {
+    const nl = lang === 'nl';
+    const je = nl && d.formality === 'je';
+    const U = (u, j) => (je ? j : u);
+    const s = settings;
+    const dom = domain(l.url);
+    const items = scanState(l) === 'done'
+      ? l.scanResult.findings.filter(f => f.severity !== 'info').slice(0, 3).map(f => '- ' + findingText(f, lang).title)
+      : [];
+    const sig = [s.contactName, s.companyName, s.phone, s.email].filter(Boolean).join('\n');
+    const me = s.contactName || (nl ? '[je naam]' : '[your name]');
+    const co = s.companyName || (nl ? '[bedrijf]' : '[company]');
+
+    if (d.kind === 'followup' && d.channel !== 'phone') {
+      const prev = lastSent(l.id);
+      const when = prev ? t('daysAgo', daysSince(prev.sentAt)) : (nl ? 'onlangs' : 'recently');
+      const hi = nl ? (l.name ? `Beste team van ${l.name},` : 'Goedendag,') : (l.name ? `Hi ${l.name} team,` : 'Hello,');
+      return {
+        subject: d.channel === 'email' ? (prev && prev.subject ? 'Re: ' + prev.subject.replace(/^re:\s*/i, '') : (nl ? `Nog even over ${dom}` : `Following up on ${dom}`)) : '',
+        body: nl
+          ? `${hi}\n\nIk stuurde ${U('u', 'je')} ${when} een bericht over de scan van ${dom}. Ik begrijp dat het druk kan zijn, dus ik wilde het nog even onder ${U('uw', 'je')} aandacht brengen.` +
+            (items.length ? `\n\nKort samengevat: ${items[0].slice(2).toLowerCase()} is het belangrijkste punt.` : '') +
+            `\n\nZal ik het scanrapport alsnog kosteloos toesturen?\n\nMet vriendelijke groet,\n${sig || me}`
+          : `${hi}\n\nI sent you a message ${when} about the scan of ${dom}. I know things get busy, so I wanted to bring it back to your attention.` +
+            (items.length ? `\n\nIn short: ${items[0].slice(2)} is the most important point.` : '') +
+            `\n\nShall I still send you the free scan report?\n\nBest regards,\n${sig || me}`,
+      };
+    }
+
+    if (d.channel === 'phone') {
+      return {
+        subject: '',
+        body: nl ? [
+          'OPENING',
+          `Goedendag, ${U('u spreekt', 'je spreekt')} met ${me} van ${co}. Spreek ik met degene die over de website gaat?`,
+          '',
+          'REDEN VAN BELLEN',
+          `Ik heb een korte, openbare scan gedaan van ${dom}` + (items.length ? ' en zag een paar punten die aandacht verdienen:' : ' en wilde even kennismaken.'),
+          ...items,
+          '',
+          'VRAGEN',
+          `- Wie onderhoudt de website op dit moment?`,
+          `- Wanneer is de site voor het laatst bijgewerkt?`,
+          `- Is de website belangrijk voor het binnenhalen van klanten?`,
+          '',
+          'GEEN INTERESSE?',
+          `Helemaal prima. Mag ik ${U('u', 'je')} het gratis scanrapport mailen, zodat ${U('u', 'je')} het later rustig kunt bekijken?`,
+          '',
+          'AFSLUITING',
+          `Zal ik het rapport sturen en volgende week even terugbellen om het kort door te nemen?`,
+        ].join('\n') : [
+          'OPENING',
+          `Hi, this is ${me} from ${co}. Am I speaking with the person who looks after the website?`,
+          '',
+          'REASON FOR CALLING',
+          `I ran a quick public scan of ${dom}` + (items.length ? ' and noticed a few things worth a look:' : ' and wanted to introduce myself.'),
+          ...items,
+          '',
+          'QUESTIONS',
+          '- Who maintains the website at the moment?',
+          '- When was the site last updated?',
+          '- How important is the website for winning new customers?',
+          '',
+          'NOT INTERESTED?',
+          'No problem at all. Can I email you the free scan report so you can look at it later?',
+          '',
+          'CLOSE',
+          'Shall I send the report and give you a quick call next week to go through it?',
+        ].join('\n'),
+      };
+    }
+
+    if (d.channel === 'linkedin') {
+      return {
+        subject: '',
+        body: nl
+          ? `Hoi${l.name ? ' ' + l.name : ''},\n\nIk keek naar ${dom} en zag ${items.length ? 'een paar technische punten (o.a. ' + items[0].slice(2) + ') die makkelijk op te lossen zijn' : 'een mooie site'}. Zal ik ${U('u', 'je')} het gratis scanrapport sturen?\n\nGroet,\n${me}`
+          : `Hi${l.name ? ' ' + l.name : ''},\n\nI had a look at ${dom} and noticed ${items.length ? 'a few technical points (incl. ' + items[0].slice(2) + ') that are easy to fix' : 'a nicely built site'}. Shall I send you the free scan report?\n\nBest,\n${me}`,
+      };
+    }
+
+    const greeting = nl ? (l.name ? `Beste team van ${l.name},` : 'Goedendag,') : (l.name ? `Hi ${l.name} team,` : 'Hello,');
+    const body = nl
+      ? `${greeting}\n\nIk kwam ${U('uw', 'jullie')} website ${dom} tegen en heb er een korte, openbare scan op gedaan.` +
+        (items.length
+          ? ` Daarbij vielen me een paar punten op:\n\n${items.join('\n')}\n\nDit zijn vaak kleine aanpassingen, maar ze maken verschil voor de veiligheid en vindbaarheid van ${U('uw', 'jullie')} site.`
+          : ' De site staat er technisch goed op — mooi werk.') +
+        `\n\nZal ik ${U('u', 'je')} het volledige scanrapport kosteloos toesturen? Dan ${U('kunt u', 'kun je')} zelf beoordelen of het de moeite waard is.\n\nMet vriendelijke groet,\n${sig || me}`
+      : `${greeting}\n\nI came across ${dom} and ran a quick public scan of the site.` +
+        (items.length
+          ? ` A few things stood out:\n\n${items.join('\n')}\n\nThese are usually small fixes, but they make a real difference for your site's security and search ranking.`
+          : ' Technically it looks in good shape — nice work.') +
+        `\n\nShall I send you the full scan report, free of charge? Then you can judge for yourself whether it's worth acting on.\n\nBest regards,\n${sig || me}`;
+    return { subject: nl ? `Korte vraag over ${dom}` : `Quick question about ${dom}`, body };
+  }
+
+  function outreachText() {
+    const d = outreachDraft;
+    if (!d) return '';
+    return (d.channel === 'email' && d.subject ? (lang === 'nl' ? 'Onderwerp: ' : 'Subject: ') + d.subject + '\n\n' : '') + d.body;
+  }
+
+  function copyOutreach() {
+    navigator.clipboard.writeText(outreachText()).then(() => toast(t('toastCopiedMsg'), 'success'));
+  }
+
+  function openOutreachMail() {
+    const d = outreachDraft;
+    if (!d) return;
+    location.href = 'mailto:?subject=' + encodeURIComponent(d.subject || '') + '&body=' + encodeURIComponent(d.body || '');
+  }
+
+  // ── Saved messages ──
+  const FOLLOW_UP_DAYS = 5; // contacted this long ago without an outcome → follow up
+  let msgTab = 'planned';
+  let editingMsgId = null;
+  let msgEditDraft = null;
+  const expandedMsgs = new Set();
+
+  function isoDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function daysSince(ts) {
+    const a = new Date(ts); a.setHours(0, 0, 0, 0);
+    const b = new Date(); b.setHours(0, 0, 0, 0);
+    return Math.round((b - a) / 864e5);
+  }
+
+  function lastSent(leadId) {
+    return messages.filter(m => m.leadId === leadId && m.status === 'sent').sort((a, b) => b.sentAt - a.sentAt)[0] || null;
+  }
+
+  function followUpContext(leadId, d) {
+    if (d.kind !== 'followup') return null;
+    const m = lastSent(leadId);
+    return m ? { body: m.body, daysAgo: daysSince(m.sentAt) } : null;
+  }
+
+  function channelIcon(ch) {
+    const icon = ch === 'linkedin' ? 'fa-brands fa-linkedin' : ch === 'phone' ? 'fa-solid fa-phone' : 'fa-regular fa-envelope';
+    return '<i class="' + icon + '" style="color:var(--muted)"></i>';
+  }
+
+  function channelLabel(ch) {
+    return ch === 'linkedin' ? t('chLinkedin') : ch === 'phone' ? t('chPhone') : t('chEmail');
+  }
+
+  function msgWhen(m) {
+    if (m.status === 'sent') return t('sentOn', fmtDate(m.sentAt));
+    return m.planFor ? t('plannedFor', fmtLong(parseISODate(m.planFor))) : t('grpNoDate');
+  }
+
+  // Planned messages without a date count as "send whenever", so they're due too
+  function isDue(m) {
+    return m.status !== 'sent' && (!m.planFor || m.planFor <= todayISO());
+  }
+
+  async function apiSaveMessage(m) {
+    await fetch('/api/messages/' + encodeURIComponent(m.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) });
+  }
+
+  function draftToMessage(leadId, d, extra) {
+    return {
+      id: uid(), leadId, channel: d.channel, kind: d.kind || 'first',
+      subject: d.channel === 'email' ? (d.subject || '') : '', body: d.body,
+      created: Date.now(), status: 'planned', planFor: '', sentAt: null,
+      ...extra,
+    };
+  }
+
+  function msgText(m) {
+    return (m.channel === 'email' && m.subject ? (lang === 'nl' ? 'Onderwerp: ' : 'Subject: ') + m.subject + '\n\n' : '') + m.body;
+  }
+
+  // Schedule modal
+  function openSchedule() {
+    if (!outreachDraft || !outreachDraft.body.trim()) return;
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    setScheduleDate(isoDate(d));
+    $('schedule').classList.add('open');
+  }
+
+  function closeSchedule() { $('schedule').classList.remove('open'); }
+
+  function setScheduleDate(iso) {
+    $('schedule-date').value = iso;
+    renderScheduleChips();
+  }
+
+  function renderScheduleChips() {
+    const toMonday = ((8 - new Date().getDay()) % 7) || 7;
+    const opts = [['qToday', 0], ['qTomorrow', 1], ['qIn3', 3], ['qNextWeek', toMonday]];
+    const cur = $('schedule-date').value;
+    $('schedule-chips').innerHTML = opts.map(([k, n]) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      const iso = isoDate(d);
+      return '<button class="chip' + (iso === cur ? ' active' : '') + '" onclick="setScheduleDate(\'' + iso + '\')">' + esc(t(k)) + '</button>';
+    }).join('');
+  }
+
+  $('schedule-date').addEventListener('input', renderScheduleChips);
+
+  async function confirmSchedule() {
+    const l = currentLead();
+    if (!l || !outreachDraft) return;
+    const m = draftToMessage(l.id, outreachDraft, { planFor: $('schedule-date').value || '' });
+    closeSchedule();
+    await apiSaveMessage(m);
+    messages.unshift(m);
+    render();
+    toast(t('toastMsgSaved'), 'success');
+  }
+
+  async function sendDraftNow() {
+    const l = currentLead();
+    if (!l || !outreachDraft || !outreachDraft.body.trim()) return;
+    const m = draftToMessage(l.id, outreachDraft, { status: 'sent', sentAt: Date.now() });
+    await apiSaveMessage(m);
+    messages.unshift(m);
+    if (l.status === 'new') await saveLead(l.id, { status: 'contacted' });
+    render();
+    toast(t('toastMsgSent'), 'success');
+  }
+
+  async function markMsgSent(id) {
+    const m = messages.find(x => x.id === id);
+    if (!m) return;
+    m.status = 'sent';
+    m.sentAt = Date.now();
+    await apiSaveMessage(m);
+    const l = leads.find(x => x.id === m.leadId);
+    if (l && l.status === 'new') await saveLead(l.id, { status: 'contacted' });
+    render();
+    toast(t('toastMsgSent'), 'success');
+  }
+
+  async function setMsgDate(id, iso) {
+    const m = messages.find(x => x.id === id);
+    if (!m) return;
+    m.planFor = iso;
+    await apiSaveMessage(m);
+    render();
+  }
+
+  function askDeleteMsg(id) {
+    openConfirm(t('deleteMsgTitle'), t('deleteMsgText'), t('delete'), true, async () => {
+      await fetch('/api/messages/' + encodeURIComponent(id), { method: 'DELETE' });
+      messages = messages.filter(m => m.id !== id);
+      render();
+      toast(t('toastMsgDeleted'), '');
+    });
+  }
+
+  function copyMsg(id) {
+    const m = messages.find(x => x.id === id);
+    if (m) navigator.clipboard.writeText(msgText(m)).then(() => toast(t('toastCopiedMsg'), 'success'));
+  }
+
+  function openMsgMail(id) {
+    const m = messages.find(x => x.id === id);
+    if (m) location.href = 'mailto:?subject=' + encodeURIComponent(m.subject || '') + '&body=' + encodeURIComponent(m.body || '');
+  }
+
+  function toggleMsg(id) {
+    if (expandedMsgs.has(id)) expandedMsgs.delete(id); else expandedMsgs.add(id);
+    render();
+  }
+
+  function editMsg(id) {
+    const m = messages.find(x => x.id === id);
+    if (!m) return;
+    editingMsgId = id;
+    msgEditDraft = { subject: m.subject || '', body: m.body };
+    render();
+    const b = $('me-body');
+    if (b) b.focus();
+  }
+
+  function cancelMsgEdit() {
+    editingMsgId = null;
+    msgEditDraft = null;
+    render();
+  }
+
+  async function saveMsgEdit(id) {
+    const m = messages.find(x => x.id === id);
+    if (!m || !msgEditDraft) return;
+    m.subject = msgEditDraft.subject;
+    m.body = msgEditDraft.body;
+    editingMsgId = null;
+    msgEditDraft = null;
+    await apiSaveMessage(m);
+    render();
+    toast(t('toastSaved'), 'success');
+  }
+
+  function setMsgTab(tab) { msgTab = tab; render(); }
+
+  function msgCard(m) {
+    const l = leads.find(x => x.id === m.leadId);
+    const dom = l ? domain(l.url) : '';
+    const id = esc(m.id);
+    const expanded = expandedMsgs.has(m.id);
+    const overdue = m.status !== 'sent' && m.planFor && m.planFor < todayISO();
+
+    let h = '<div class="msg"><div class="msg-head">' + (l ? favicon(l.url) : '') +
+      '<div class="grow"><a class="link" href="#/lead/' + encodeURIComponent(m.leadId) + '">' + esc(l ? (l.name || dom) : '—') + '</a>' +
+      '<div style="font-size:12px;color:var(--muted);margin-top:1px">' + channelIcon(m.channel) + ' ' + esc(channelLabel(m.channel)) +
+      (m.kind === 'followup' ? ' · ' + esc(t('kindFollow')) : '') + (dom ? ' · ' + esc(dom) : '') + '</div></div>' +
+      (m.status === 'sent'
+        ? '<span class="date">' + esc(t('sentOn', fmtDate(m.sentAt))) + '</span>'
+        : '<input type="date" class="date-input' + (overdue ? ' overdue' : '') + '" value="' + esc(m.planFor || '') + '" onchange="setMsgDate(\'' + id + '\', this.value)" title="' + esc(t('sendOn')) + '">') +
+      '</div>';
+
+    if (editingMsgId === m.id && msgEditDraft) {
+      h += (m.channel === 'email' ? '<input id="me-subject" value="' + esc(msgEditDraft.subject) + '" placeholder="' + esc(t('subjectPh')) + '" oninput="msgEditDraft.subject = this.value">' : '') +
+        '<textarea id="me-body" class="doc-text" rows="10" oninput="msgEditDraft.body = this.value">' + esc(msgEditDraft.body) + '</textarea>' +
+        '<div class="msg-actions"><button class="btn btn-primary btn-sm" onclick="saveMsgEdit(\'' + id + '\')"><i class="fa-solid fa-check"></i>' + esc(t('save')) + '</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="cancelMsgEdit()">' + esc(t('cancel')) + '</button></div>';
+    } else {
+      h += (m.subject ? '<div class="msg-subject">' + esc(m.subject) + '</div>' : '') +
+        '<div class="msg-body' + (expanded ? '' : ' clamp') + '">' + esc(m.body) + '</div>' +
+        '<div class="msg-actions">' +
+          '<button class="btn btn-ghost btn-sm" onclick="toggleMsg(\'' + id + '\')">' + esc(expanded ? t('showLess') : t('showAll')) + '</button>' +
+          '<span style="flex:1"></span>' +
+          '<button class="icon-btn danger" title="' + esc(t('delete')) + '" onclick="askDeleteMsg(\'' + id + '\')"><i class="fa-solid fa-trash-can"></i></button>' +
+          '<button class="icon-btn" title="' + esc(t('edit')) + '" onclick="editMsg(\'' + id + '\')"><i class="fa-solid fa-pen"></i></button>' +
+          '<button class="btn btn-secondary btn-sm" onclick="copyMsg(\'' + id + '\')"><i class="fa-regular fa-copy"></i>' + esc(t('copy')) + '</button>' +
+          (m.channel === 'email' ? '<button class="btn btn-secondary btn-sm" onclick="openMsgMail(\'' + id + '\')"><i class="fa-regular fa-envelope"></i>' + esc(t('openMail')) + '</button>' : '') +
+          (m.status !== 'sent'
+            ? '<button class="btn btn-primary btn-sm" onclick="markMsgSent(\'' + id + '\')"><i class="fa-solid fa-paper-plane"></i>' + esc(t('markSent')) + '</button>'
+            : '<a class="btn btn-secondary btn-sm" href="#/lead/' + encodeURIComponent(m.leadId) + '/outreach"><i class="fa-solid fa-reply"></i>' + esc(t('followUp')) + '</a>') +
+        '</div>';
+    }
+    return h + '</div>';
+  }
+
+  function renderMessages() {
+    const el = $('view-messages');
+    const restore = captureFocus();
+    const today = todayISO();
+    const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return isoDate(d); })();
+    const planned = messages.filter(m => m.status !== 'sent').sort((a, b) => (a.planFor || '9999').localeCompare(b.planFor || '9999'));
+    const sent = messages.filter(m => m.status === 'sent').sort((a, b) => b.sentAt - a.sentAt);
+
+    let html = '<div class="page-head"><div><h1 class="page-title">' + esc(t('messages')) + '</h1><p class="page-sub">' + esc(t('messagesSub')) + '</p></div>' +
+      '<div class="seg"><button class="' + (msgTab === 'planned' ? 'active' : '') + '" onclick="setMsgTab(\'planned\')">' + esc(t('tabPlanned')) + '<span class="n">' + planned.length + '</span></button>' +
+      '<button class="' + (msgTab === 'sent' ? 'active' : '') + '" onclick="setMsgTab(\'sent\')">' + esc(t('tabSent')) + '<span class="n">' + sent.length + '</span></button></div></div>';
+
+    const emptyCard = (icon, title, hint) => '<div class="card empty"><div class="empty-icon"><i class="fa-solid ' + icon + '"></i></div><h3>' + esc(title) + '</h3><p>' + esc(hint) + '</p></div>';
+
+    if (msgTab === 'planned') {
+      if (!planned.length) {
+        html += emptyCard('fa-paper-plane', t('noMessages'), t('noMessagesHint'));
+      } else {
+        const groups = [
+          { key: 'overdue', label: t('grpOverdue'), items: planned.filter(m => m.planFor && m.planFor < today) },
+          { key: 'today', label: t('grpToday'), items: planned.filter(m => m.planFor === today) },
+          { key: 'tomorrow', label: t('grpTomorrow'), items: planned.filter(m => m.planFor === tomorrow) },
+          { key: 'later', label: t('grpLater'), items: planned.filter(m => m.planFor && m.planFor > tomorrow) },
+          { key: 'nodate', label: t('grpNoDate'), items: planned.filter(m => !m.planFor) },
+        ];
+        html += '<div class="card">' + groups.filter(g => g.items.length).map(g =>
+          '<div class="group-label' + (g.key === 'overdue' ? ' overdue' : '') + '">' + esc(g.label) + ' · ' + g.items.length + '</div>' + g.items.map(msgCard).join('')
+        ).join('') + '</div>';
+      }
+    } else {
+      html += sent.length ? '<div class="card">' + sent.map(msgCard).join('') + '</div>' : emptyCard('fa-inbox', t('noSent'), t('noSentHint'));
+    }
+
+    el.innerHTML = '<div class="doc-stack fade-in">' + html + '</div>';
+    restore();
+  }
+
+  // ── Needs attention: the action list ──
+  const moneyRound = (n) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+
+  // Rough value of a lead: its quote if there is one, otherwise the estimated hours for its issues
+  function estimateValue(l) {
+    if (l.quote) return quoteTotals(l.quote).sub;
+    if (scanState(l) !== 'done') return 0;
+    const seen = new Set();
+    let total = 0;
+    l.scanResult.findings.forEach(f => {
+      if (f.severity === 'info' || seen.has(f.tech) || !SERVICE_DEFS.find(d => d.tech === f.tech)) return;
+      seen.add(f.tech);
+      total += hoursFor(f.tech) * (Number(settings.hourlyRate) || 0);
+    });
+    return total;
+  }
+
+  function priority(l) {
+    const c = countFindings(l.scanResult.findings);
+    return c.critical * 3 + c.warning;
+  }
+
+  function attentionData() {
+    const plannedLeadIds = new Set(messages.filter(m => m.status !== 'sent').map(m => m.leadId));
+    const due = messages.filter(isDue).sort((a, b) => (a.planFor || '').localeCompare(b.planFor || ''));
+    const ready = leads
+      .filter(l => l.status === 'new' && hasIssues(l) && !lastSent(l.id) && !plannedLeadIds.has(l.id))
+      .sort((a, b) => priority(b) - priority(a) || estimateValue(b) - estimateValue(a));
+    const followUp = leads.filter(l => {
+      if (l.status !== 'contacted' || l.quote || plannedLeadIds.has(l.id)) return false;
+      const m = lastSent(l.id);
+      return !m || daysSince(m.sentAt) >= FOLLOW_UP_DAYS;
+    });
+    const openQuotes = leads.filter(l => l.quote && (l.status === 'new' || l.status === 'contacted'));
+    const unscanned = leads.filter(l => ['none', 'error'].includes(scanState(l))).length;
+    return { due, ready, followUp, openQuotes, unscanned };
+  }
+
+  function statCard(label, value, sub, icon, tone) {
+    return '<div class="card stat"><div class="stat-top"><span class="stat-label">' + esc(label) + '</span><span class="stat-icon ' + tone + '"><i class="fa-solid ' + icon + '"></i></span></div>' +
+      '<div class="stat-value">' + value + '</div><div class="stat-sub">' + esc(sub) + '</div></div>';
+  }
+
+  function sectionHead(title, n, hint, action) {
+    return '<div class="section-head"><div><h2>' + esc(title) + (n !== null ? ' <span class="n">' + n + '</span>' : '') + '</h2>' +
+      (hint ? '<p>' + esc(hint) + '</p>' : '') + '</div>' + (action || '') + '</div>';
+  }
+
+  function leadLink(l) {
+    return '<a class="link" href="#/lead/' + encodeURIComponent(l.id) + '">' + esc(l.name || domain(l.url)) + '</a>';
+  }
+
+  function oppCard(l) {
+    const id = encodeURIComponent(l.id);
+    const score = healthScore(l.scanResult.findings);
+    const top = l.scanResult.findings.filter(f => f.severity !== 'info').slice(0, 3);
+    const sevColor = { critical: 'var(--red)', warning: 'var(--amber)' };
+    return '<div class="card opp">' +
+      '<div class="opp-top">' + favicon(l.url) +
+        '<div class="grow">' + leadLink(l) + '<div class="site-sub">' + esc(domain(l.url)) + '</div></div>' +
+        '<div class="ring sm" style="--p:' + score + ';--c:' + healthColor(score) + '" title="' + esc(t('healthScoreShort')) + ' ' + score + '/100"><div class="ring-inner"><span class="ring-val">' + score + '</span></div></div>' +
+        '<div class="opp-value"><div class="v">' + moneyRound(estimateValue(l)) + '</div><div class="l">' + esc(t('estimate')) + '</div></div>' +
+      '</div>' +
+      '<ul class="find-list">' + top.map(f => '<li><span class="dot" style="background:' + sevColor[f.severity] + '"></span><span>' + esc(findingText(f, lang).title) + '</span></li>').join('') + '</ul>' +
+      '<div class="opp-actions">' +
+        '<a class="btn btn-primary btn-sm" href="#/lead/' + id + '/outreach"><i class="fa-solid fa-wand-magic-sparkles"></i>' + esc(t('writeOutreach')) + '</a>' +
+        '<a class="btn btn-secondary btn-sm" href="#/lead/' + id + '">' + esc(t('viewLead')) + '</a>' +
+        '<span style="flex:1"></span>' +
+        '<button class="btn btn-ghost btn-sm" onclick="setStatus(\'' + esc(l.id) + '\', \'rejected\')">' + esc(t('notInterested')) + '</button>' +
+      '</div></div>';
+  }
+
+  function renderAttention(a) {
+    const el = $('view-attention');
+    if (!loaded) { el.innerHTML = ''; return; }
+
+    const value = a.ready.concat(a.followUp, a.openQuotes).reduce((s, l) => s + estimateValue(l), 0);
+    let html = '<div class="page-head"><div><h1 class="page-title">' + esc(t('needsAttention')) + '</h1><p class="page-sub">' + esc(t('attentionSub')) + '</p></div></div>';
+
+    html += '<div class="stats">' +
+      statCard(t('kpiDue'), a.due.length, t('kpiDueSub'), 'fa-paper-plane', 'tone-accent') +
+      statCard(t('kpiReady'), a.ready.length, t('kpiReadySub'), 'fa-fire', 'tone-amber') +
+      statCard(t('kpiFollow'), a.followUp.length, t('kpiFollowSub', FOLLOW_UP_DAYS), 'fa-reply', 'tone-blue') +
+      statCard(t('kpiValue'), moneyRound(value), t('kpiValueSub'), 'fa-euro-sign', 'tone-green') +
+      '</div>';
+
+    const nothing = !a.due.length && !a.ready.length && !a.followUp.length && !a.openQuotes.length;
+    if (nothing) {
+      html += '<div class="card empty"><div class="empty-icon" style="color:var(--green)"><i class="fa-solid fa-mug-hot"></i></div><h3>' + esc(t('allDone')) + '</h3><p>' + esc(t('allDoneHint')) + '</p></div>';
+    }
+
+    // 1. Messages due today (or overdue)
+    if (a.due.length) {
+      html += sectionHead(t('secDue'), a.due.length, t('secDueHint'), '<a class="btn btn-ghost btn-sm" href="#/messages">' + esc(t('allMessages')) + '</a>');
+      html += '<div class="card rows">' + a.due.map(m => {
+        const l = leads.find(x => x.id === m.leadId);
+        if (!l) return '';
+        const overdue = m.planFor && m.planFor < todayISO();
+        const mid = esc(m.id);
+        return '<div class="row-item">' + favicon(l.url) +
+          '<div class="grow">' + leadLink(l) + '<div class="meta">' + channelIcon(m.channel) + ' ' + esc(m.subject || channelLabel(m.channel)) +
+            ' · <span class="' + (overdue ? 'overdue' : '') + '">' + esc(msgWhen(m)) + '</span></div></div>' +
+          '<div class="row-actions-static">' +
+            '<button class="btn btn-secondary btn-sm" onclick="copyMsg(\'' + mid + '\')"><i class="fa-regular fa-copy"></i>' + esc(t('copy')) + '</button>' +
+            (m.channel === 'email' ? '<button class="btn btn-secondary btn-sm" onclick="openMsgMail(\'' + mid + '\')"><i class="fa-regular fa-envelope"></i>' + esc(t('openMail')) + '</button>' : '') +
+            '<button class="btn btn-primary btn-sm" onclick="markMsgSent(\'' + mid + '\')"><i class="fa-solid fa-paper-plane"></i>' + esc(t('markSent')) + '</button>' +
+          '</div></div>';
+      }).join('') + '</div>';
+    }
+
+    // 2. New opportunities
+    if (!nothing) {
+      html += sectionHead(t('secReady'), a.ready.length, t('secReadyHint'));
+      html += a.ready.length
+        ? '<div class="opp-grid">' + a.ready.map(oppCard).join('') + '</div>'
+        : '<div class="card card-body muted-note">' + esc(t('noReady')) + '</div>';
+    }
+
+    // 3. Follow-ups
+    if (a.followUp.length) {
+      html += sectionHead(t('secFollow'), a.followUp.length, t('secFollowHint', FOLLOW_UP_DAYS));
+      html += '<div class="card rows">' + a.followUp.map(l => {
+        const m = lastSent(l.id);
+        const id = esc(l.id);
+        return '<div class="row-item">' + favicon(l.url) +
+          '<div class="grow">' + leadLink(l) + '<div class="meta">' + (m ? channelIcon(m.channel) + ' ' + esc(t('contactedAgo', t('daysAgo', daysSince(m.sentAt)))) : esc(t('dateUnknown'))) + '</div></div>' +
+          '<div class="row-actions-static">' +
+            '<button class="btn btn-ghost btn-sm" onclick="setStatus(\'' + id + '\', \'rejected\')">' + esc(t('notInterested')) + '</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="setStatus(\'' + id + '\', \'qualified\')"><i class="fa-solid fa-thumbs-up"></i>' + esc(t('interested')) + '</button>' +
+            '<a class="btn btn-primary btn-sm" href="#/lead/' + encodeURIComponent(l.id) + '/outreach"><i class="fa-solid fa-reply"></i>' + esc(t('followUpMsg')) + '</a>' +
+          '</div></div>';
+      }).join('') + '</div>';
+    }
+
+    // 4. Open quotes
+    if (a.openQuotes.length) {
+      html += sectionHead(t('secQuotes'), a.openQuotes.length, t('secQuotesHint'));
+      html += '<div class="card rows">' + a.openQuotes.map(l => {
+        const id = esc(l.id);
+        return '<div class="row-item">' + favicon(l.url) +
+          '<div class="grow">' + leadLink(l) + '<div class="meta"><i class="fa-solid fa-file-invoice" style="color:var(--muted)"></i> ' + esc(t('quoteLabel', l.quote.number)) +
+            ' · ' + money(quoteTotals(l.quote).total) + ' · ' + esc(fmtLong(parseISODate(l.quote.date))) + '</div></div>' +
+          '<div class="row-actions-static">' +
+            '<button class="btn btn-ghost btn-sm" onclick="setStatus(\'' + id + '\', \'rejected\')">' + esc(t('lost')) + '</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="setStatus(\'' + id + '\', \'qualified\')"><i class="fa-solid fa-trophy"></i>' + esc(t('won')) + '</button>' +
+            '<a class="btn btn-secondary btn-sm" href="#/lead/' + encodeURIComponent(l.id) + '/quote">' + esc(t('openQuote')) + '</a>' +
+          '</div></div>';
+      }).join('') + '</div>';
+    }
+
+    // 5. Unscanned leads hint
+    if (a.unscanned) {
+      html += '<div class="card banner"><i class="fa-solid fa-satellite-dish" style="color:var(--blue)"></i><div class="grow">' + esc(t('unscannedBanner', a.unscanned)) + '</div>' +
+        '<button class="btn btn-secondary btn-sm" onclick="scanAllLeads()"' + (scanAllRunning ? ' disabled' : '') + '><i class="fa-solid fa-satellite-dish"></i>' + esc(t('scanAll')) + '</button></div>';
+    }
+
+    el.innerHTML = '<div class="fade-in">' + html + '</div>';
+  }
+
   function quoteCard(l) {
     if (!l.quote) return '';
     const tot = quoteTotals(l.quote);
@@ -2055,22 +3114,22 @@
           '<div class="tr grand"><span>' + esc(t('total')) + '</span><span id="q-total">' + money(tot.total) + '</span></div>' +
         '</div></div></div>';
 
-    const side =
-      '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('quoteDetails')) + '</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px">' +
+    // Laid out in the same order as the PDF: details → introduction → lines → terms
+    const detailsCard =
+      '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('quoteDetails')) + '</div>' +
+        '<span class="hint" id="qf-valid">' + esc(t('validUntil')) + ': ' + esc(fmtLong(addDays(q.date, q.validDays))) + '</span></div>' +
+      '<div class="card-body"><div class="form-grid cols-4">' +
         qf(t('quoteNumber'), '<input id="qf-number" value="' + esc(q.number) + '" oninput="qField(\'number\', this.value)">') +
-        '<div class="form-grid">' +
-          qf(t('quoteDate'), '<input type="date" id="qf-date" value="' + esc(q.date) + '" oninput="qField(\'date\', this.value)">') +
-          qf(t('sValidDays'), '<div class="input-affix suffix"><input type="number" min="0" id="qf-valid-days" value="' + esc(q.validDays) + '" oninput="qField(\'validDays\', this.value)"><span>' + esc(t('days')) + '</span></div>') +
-        '</div>' +
+        qf(t('quoteDate'), '<input type="date" id="qf-date" value="' + esc(q.date) + '" oninput="qField(\'date\', this.value)">') +
+        qf(t('sValidDays'), '<div class="input-affix suffix"><input type="number" min="0" id="qf-valid-days" value="' + esc(q.validDays) + '" oninput="qField(\'validDays\', this.value)"><span>' + esc(t('days')) + '</span></div>') +
         qf(t('sVatRate'), '<div class="input-affix suffix"><input type="number" min="0" step="1" id="qf-vat" value="' + esc(q.vatRate) + '" oninput="qField(\'vatRate\', this.value)"><span>%</span></div>') +
-        '<div class="hint" id="qf-valid">' + esc(t('validUntil')) + ': ' + esc(fmtLong(addDays(q.date, q.validDays))) + '</div>' +
-      '</div></div>' +
-      '<div class="card"><div class="card-head"><div class="card-title">' + esc(t('quoteTexts')) + '</div></div><div class="card-body" style="display:flex;flex-direction:column;gap:12px">' +
-        qf(t('sIntro'), '<textarea id="qf-intro" rows="5" oninput="qField(\'intro\', this.value)">' + esc(q.intro) + '</textarea>') +
-        qf(t('sTerms'), '<textarea id="qf-terms" rows="4" oninput="qField(\'terms\', this.value)">' + esc(q.terms) + '</textarea>') +
-      '</div></div>';
+      '</div></div></div>';
 
-    el.innerHTML = html + '<div class="detail-grid"><div class="stack">' + main + '</div><div class="stack">' + side + '</div></div>';
+    const textCard = (key, label, rows) =>
+      '<div class="card"><div class="card-head"><div class="card-title">' + esc(label) + '</div></div>' +
+      '<textarea class="doc-text bare" id="qf-' + key + '" rows="' + rows + '" oninput="qField(\'' + key + '\', this.value)">' + esc(q[key]) + '</textarea></div>';
+
+    el.innerHTML = html + '<div class="stack doc-stack">' + detailsCard + textCard('intro', t('sIntro'), 5) + main + textCard('terms', t('sTerms'), 4) + '</div>';
     restore();
   }
 
