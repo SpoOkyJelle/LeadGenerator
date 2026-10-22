@@ -27,6 +27,8 @@ const DEFAULT_SETTINGS = {
   kvk: '', vatNumber: '', iban: '',
   hourlyRate: 75, vatRate: 21, validDays: 30, quotePrefix: 'OFF-', nextQuoteNumber: 1,
   introText: '', termsText: '',
+  smtpHost: '', smtpPort: 587, smtpSecure: false, smtpUser: '', smtpFrom: '',
+  autoRescanDays: 0,
   hours: {},
 };
 
@@ -138,6 +140,21 @@ function renderSettings() {
         '<div class="hint">' + esc(s.anthropicApiKeySet ? t('apiKeySet') : s.aiConfigured ? t('apiKeyEnv') : t('apiKeyHint')) + '</div></div>' +
         '<div style="margin-top:14px">' + field('anthropicWorkspaceId', t('sWorkspace'), { ph: 'wrkspc_…', hint: t('workspaceHint') }) + '</div>' +
         (s.anthropicApiKeySet ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="removeApiKey()"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button></div>' : '')) +
+      section(t('emailSettings'), t('emailSettingsDesc'),
+        '<div class="form-grid">' +
+          field('smtpHost', t('sSmtpHost'), { ph: 'smtp.gmail.com' }) +
+          field('smtpPort', t('sSmtpPort'), { num: true, step: 1 }) +
+          field('smtpUser', t('sSmtpUser'), { full: true, ph: 'jij@jouwbedrijf.nl' }) +
+        '</div>' +
+        '<div class="field"><label for="set-smtpPass">' + esc(t('sSmtpPass')) + '</label>' +
+          '<input id="set-smtpPass" type="password" autocomplete="off" spellcheck="false" placeholder="' + (s.smtpPassSet ? '••••••••••••' : '') + '" oninput="markDirty()">' +
+          '<div class="hint">' + esc(s.smtpPassSet ? t('smtpPassSetHint') : t('smtpHint')) + '</div></div>' +
+        '<div style="margin-top:14px">' + field('smtpFrom', t('sSmtpFrom'), { full: true, type: 'email', ph: 'info@jouwbedrijf.nl', hint: t('smtpFromHint') }) + '</div>' +
+        '<label class="check-row" style="margin-top:8px"><input type="checkbox" id="set-smtpSecure"' + (s.smtpSecure ? ' checked' : '') + ' onchange="markDirty()"><span>' + esc(t('sSmtpSecure')) + '</span></label>' +
+        '<div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+          '<button class="btn btn-secondary" id="smtp-test-btn" onclick="testSmtp()"><i class="fa-solid fa-plug-circle-check"></i>' + esc(t('testConnection')) + '</button>' +
+          (s.smtpPassSet ? '<button class="btn btn-ghost btn-sm" onclick="removeApiKey(\'smtpPass\')"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button>' : '') +
+        '</div>') +
       section(t('shareSettings'), t('shareSettingsDesc'),
         '<div class="form-grid">' +
           field('publicReportUrl', t('sPublicReportUrl'), { full: true, ph: 'https://rapport.jouwbedrijf.nl', hint: s.publicReportUrl ? t('publicUrlActive', s.publicReportUrl) : t('publicUrlHint', s.reportPort || 3002) }) +
@@ -153,10 +170,37 @@ function renderSettings() {
         '<label class="check-row"><input type="checkbox" id="set-screenshots"' + (s.screenshotsEnabled !== false ? ' checked' : '') + ' onchange="markDirty()"><span><b>' + esc(t('sScreenshots')) + '</b><br><span class="hint">' +
           esc(s.screenshotBrowser ? t('screenshotsHint', s.screenshotBrowser) : t('noBrowser')) + '</span></span></label>' +
         '<div style="height:16px"></div>' +
+        '<div class="field"><label for="set-autoRescan">' + esc(t('sAutoRescan')) + '</label>' +
+          '<select id="set-autoRescan" data-setting="autoRescanDays" data-num onchange="markDirty()">' +
+            [0, 7, 14, 30].map(n => '<option value="' + n + '"' + (Number(s.autoRescanDays) === n ? ' selected' : '') + '>' +
+              esc(n === 0 ? t('rescanOff') : t('everyNDays', n)) + '</option>').join('') +
+          '</select><div class="hint">' + esc(t('autoRescanHint')) + '</div></div>' +
+        '<div style="height:16px"></div>' +
         '<div class="field"><label for="set-pagespeedKey">' + esc(t('sPagespeedKey')) + '</label>' +
         '<input id="set-pagespeedKey" type="password" autocomplete="off" spellcheck="false" placeholder="' + (s.pagespeedApiKeySet ? '••••••••••••' : 'AIza…') + '" oninput="markDirty()">' +
         '<div class="hint">' + esc(s.pagespeedApiKeySet ? t('apiKeySet') : t('pagespeedHint')) + '</div></div>' +
         (s.pagespeedApiKeySet ? '<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="removeApiKey(\'pagespeedApiKey\')"><i class="fa-solid fa-trash-can"></i>' + esc(t('removeKey')) + '</button></div>' : '')) +
+      section(t('accessSettings'), t('accessDesc'),
+        (s.authEnabled
+          ? '<div class="alert" style="margin-bottom:14px"><i class="fa-solid fa-lock" style="color:var(--green)"></i><div style="flex:1">' + esc(t('accessProtected')) + '</div>' +
+              '<button class="btn btn-secondary btn-sm" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>' + esc(t('logOut')) + '</button></div>'
+          : '<div class="alert info" style="margin-bottom:14px"><i class="fa-solid fa-lock-open"></i><div style="flex:1">' + esc(t('accessOpen')) + '</div></div>') +
+        '<div class="form-grid">' +
+          '<div class="field"><label for="set-authPw">' + esc(t('sNewPassword')) + '</label><input id="set-authPw" type="password" autocomplete="new-password" spellcheck="false"></div>' +
+          '<div class="field"><label for="set-authPw2">' + esc(t('sConfirmPassword')) + '</label><input id="set-authPw2" type="password" autocomplete="new-password" spellcheck="false"></div>' +
+        '</div>' +
+        '<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">' +
+          '<button class="btn btn-primary" onclick="setPassword(' + (s.authEnabled ? 'true' : 'false') + ')"><i class="fa-solid fa-key"></i>' + esc(s.authEnabled ? t('changePassword') : t('enablePassword')) + '</button>' +
+          (s.authEnabled ? '<button class="btn btn-ghost" onclick="askDisablePassword()"><i class="fa-solid fa-trash-can"></i>' + esc(t('removePassword')) + '</button>' : '') +
+        '</div>') +
+      section(t('dataBackup'), t('dataBackupDesc'),
+        '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+          '<button class="btn btn-secondary" onclick="exportBackup()"><i class="fa-solid fa-download"></i>' + esc(t('exportBackup')) + '</button>' +
+          '<label class="btn btn-secondary" style="cursor:pointer"><i class="fa-solid fa-upload"></i>' + esc(t('importBackup')) +
+            '<input type="file" accept="application/json,.json" hidden onchange="importBackup(this.files[0]); this.value=\'\'"></label>' +
+        '</div>' +
+        '<div class="hint" style="margin-top:10px">' + esc(t('exportBackupHint')) + '</div>' +
+        '<div class="hint" style="margin-top:6px">' + esc(t('importBackupHint')) + '</div>') +
       '<div style="display:flex;justify-content:flex-end">' + saveBtn + '</div>' +
     '</div></div>';
 
@@ -230,12 +274,14 @@ async function saveSettings() {
   if (settings.publicReportUrl && !/^https?:\/\//i.test(settings.publicReportUrl)) settings.publicReportUrl = 'https://' + settings.publicReportUrl;
   const shotsEl = $('set-screenshots');
   if (shotsEl) settings.screenshotsEnabled = shotsEl.checked;
+  const smtpSecEl = $('set-smtpSecure');
+  if (smtpSecEl) settings.smtpSecure = smtpSecEl.checked;
   document.querySelectorAll('[data-hidx]').forEach(el => {
     settings.hours[SERVICE_DEFS[el.dataset.hidx].tech] = parseFloat(el.value) || 0;
   });
   // Keys are only sent when a new one was typed; the server never sends them back.
   const secrets = {};
-  for (const [inputId, key] of [['set-apiKey', 'anthropicApiKey'], ['set-pagespeedKey', 'pagespeedApiKey']]) {
+  for (const [inputId, key] of [['set-apiKey', 'anthropicApiKey'], ['set-pagespeedKey', 'pagespeedApiKey'], ['set-smtpPass', 'smtpPass']]) {
     const el = $(inputId);
     if (el && el.value.trim()) secrets[key] = el.value.trim();
   }
@@ -251,6 +297,84 @@ async function saveSettings() {
   }
   toast(t('toastSettingsSaved'), 'success');
   apiLoad(); // report links depend on the public address
+}
+
+// Download the whole database as one JSON file (data stays local otherwise)
+function exportBackup() {
+  const a = document.createElement('a');
+  a.href = '/api/backup';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast(t('toastBackupExported'), 'success');
+}
+
+// Restore from an exported file. This replaces everything, so it goes through a confirm.
+function importBackup(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); } catch { data = null; }
+    if (!data || data.app !== 'lead-generator' || !data.tables) { toast(t('toastRestoreFail'), 'error'); return; }
+    openConfirm(t('importTitle'), t('importText'), t('importConfirm'), true, async () => {
+      const res = await fetch('/api/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      if (!res.ok) { toast(t('toastRestoreFail'), 'error'); return; }
+      const out = await res.json();
+      await apiLoadSettings();
+      await apiLoad();
+      settingsBuilt = false;
+      if (view === 'settings') render();
+      toast(t('toastRestored', (out.counts && out.counts.leads) || 0), 'success');
+    });
+  };
+  reader.readAsText(file);
+}
+
+// ── Access / password ──
+async function setPassword(change) {
+  const pw = ($('set-authPw') || {}).value || '';
+  const pw2 = ($('set-authPw2') || {}).value || '';
+  if (pw.length < 6) { toast(t('toastPwTooShort'), 'error'); return; }
+  if (pw !== pw2) { toast(t('toastPwMismatch'), 'error'); return; }
+  await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ authPassword: pw }) });
+  // Get a session cookie straight away so enabling (or changing) never logs you out.
+  await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+  await apiLoadSettings();
+  settingsBuilt = false;
+  render();
+  toast(t(change ? 'toastPwChanged' : 'toastPwEnabled'), 'success');
+}
+
+function askDisablePassword() {
+  openConfirm(t('disablePwTitle'), t('disablePwText'), t('removePassword'), true, async () => {
+    await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ authDisable: true }) });
+    await apiLoadSettings();
+    settingsBuilt = false;
+    render();
+    toast(t('toastPwDisabled'), '');
+  });
+}
+
+async function logout() {
+  try { await fetch('/api/logout', { method: 'POST' }); } catch {}
+  window.location.href = '/';
+}
+
+// Save first (so the server has the latest details) then ask it to connect to the mail server.
+async function testSmtp() {
+  const setBtn = (html, disabled) => { const b = $('smtp-test-btn'); if (b) { b.disabled = disabled; b.innerHTML = html; } };
+  setBtn('<span class="spin"></span>' + esc(t('testing')), true);
+  try {
+    if (settingsDirty) await saveSettings();
+    const res = await fetch('/api/smtp-test', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) toast(t('toastSmtpOk'), 'success');
+    else toast(t('toastSmtpFail', data.message || data.error || ''), 'error');
+  } catch {
+    toast(t('toastSmtpFail', ''), 'error');
+  }
+  setBtn('<i class="fa-solid fa-plug-circle-check"></i>' + esc(t('testConnection')), false);
 }
 
 async function removeApiKey(key = 'anthropicApiKey') {

@@ -57,6 +57,8 @@ const scanningIds = new Set(); // kept in memory so an interrupted scan never ge
 // ── API ──
 async function apiLoad() {
   const [leadsRes, msgRes] = await Promise.all([fetch('/api/leads'), fetch('/api/messages')]);
+  // Session expired or password just enabled elsewhere → show the login page.
+  if (leadsRes.status === 401) { window.location.reload(); return; }
   leads = await leadsRes.json();
   messages = msgRes.ok ? await msgRes.json() : [];
   loaded = true;
@@ -151,7 +153,7 @@ function render() {
   for (const v of ['list', 'detail', 'settings', 'quote', 'outreach', 'attention', 'messages']) $('view-' + v).hidden = view !== v;
 
   const a = attentionData();
-  const attentionCount = a.viewed.length + a.ready.length + a.followUp.length + a.due.length;
+  const attentionCount = a.alerts.length + a.viewed.length + a.ready.length + a.followUp.length + a.due.length;
   $('nav-count-all').textContent = leads.length;
   $('nav-count-attention').textContent = attentionCount || '';
   $('nav-count-messages').textContent = a.due.length || '';

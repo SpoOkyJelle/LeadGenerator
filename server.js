@@ -1,8 +1,10 @@
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const { db, getSetting } = require('./lib/db');
 const { scanSite, fetchSiteLogo } = require('./lib/scanner');
 const { aiConfigured, generateOutreach, OutreachError } = require('./lib/ai');
+const { mailConfigured, verifyMail, sendMail, MailError } = require('./lib/mailer');
 const { takeScreenshots, findBrowser, screenshotPath, saveImage } = require('./lib/screenshot');
 const reports = require('./lib/reports');
 
@@ -13,15 +15,97 @@ const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || '127.0.0.1';
 
 // The API keys live only on the server; they are never sent back to the browser.
-const SECRET_KEYS = ['anthropicApiKey', 'pagespeedApiKey'];
+const SECRET_KEYS = ['anthropicApiKey', 'pagespeedApiKey', 'smtpPass'];
+
+// A full backup (report HTML, scan results) can be a few MB, so allow more than the usual 1mb.
+app.use(express.json({ limit: '25mb' }));
+
+// ── Access control (optional password) ──
+// Off by default (open on localhost, as before). The moment you set a password in Settings
+// the whole dashboard and API require a login cookie; the public report server is unaffected.
+const SESSION_COOKIE = 'leadgen_session';
+const SESSION_DAYS = 30;
+
+function authEnabled() { return Boolean(getSetting('authHash')); }
+
+function authSecret() {
+  let s = getSetting('authSecret');
+  if (!s) {
+    s = crypto.randomBytes(32).toString('hex');
+    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+      .run('authSecret', JSON.stringify(s));
+  }
+  return s;
+}
+
+function hashPassword(pw) {
+  const salt = crypto.randomBytes(16);
+  return 'scrypt$' + salt.toString('hex') + '$' + crypto.scryptSync(pw, salt, 64).toString('hex');
+}
+
+function verifyPassword(pw, stored) {
+  const [scheme, saltHex, hashHex] = String(stored || '').split('$');
+  if (scheme !== 'scrypt' || !saltHex || !hashHex) return false;
+  const expected = Buffer.from(hashHex, 'hex');
+  const got = crypto.scryptSync(pw, Buffer.from(saltHex, 'hex'), 64);
+  return expected.length === got.length && crypto.timingSafeEqual(expected, got);
+}
+
+function makeToken() {
+  const payload = 'v1.' + (Date.now() + SESSION_DAYS * 864e5);
+  return payload + '.' + crypto.createHmac('sha256', authSecret()).update(payload).digest('hex');
+}
+
+function validToken(tok) {
+  const parts = String(tok || '').split('.');
+  if (parts.length !== 3) return false;
+  const payload = parts[0] + '.' + parts[1];
+  const expected = crypto.createHmac('sha256', authSecret()).update(payload).digest('hex');
+  const a = Buffer.from(parts[2]);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  return Number(parts[1]) > Date.now();
+}
+
+function readCookie(req, name) {
+  const header = req.headers.cookie;
+  if (!header) return null;
+  for (const part of header.split(';')) {
+    const i = part.indexOf('=');
+    if (i > -1 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return null;
+}
+
+function setSessionCookie(res, token, maxAgeSec) {
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAgeSec}`);
+}
+
+// Reachable without a session, so you can log in (and out) in the first place.
+app.get('/api/health', (req, res) => res.json({ ok: true, authEnabled: authEnabled() }));
+
+app.post('/api/login', (req, res) => {
+  if (!authEnabled()) return res.json({ ok: true });
+  const pw = req.body && req.body.password;
+  if (!pw || !verifyPassword(pw, getSetting('authHash'))) return res.status(401).json({ error: 'bad_password' });
+  setSessionCookie(res, makeToken(), SESSION_DAYS * 24 * 3600);
+  res.json({ ok: true });
+});
+
+app.post('/api/logout', (req, res) => {
+  setSessionCookie(res, '', 0);
+  res.json({ ok: true });
+});
+
+// The gate: everything below this line needs a valid session once a password is set.
+app.use((req, res, next) => {
+  if (!authEnabled() || validToken(readCookie(req, SESSION_COOKIE))) return next();
+  if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'auth_required' });
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
 
 // Only the dashboard files are public - never the database or the server code.
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json({ limit: '1mb' }));
-
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true });
-});
 
 // ── Scanning ──
 app.get('/api/scan', async (req, res) => {
@@ -192,12 +276,16 @@ app.delete('/api/messages/:id', (req, res) => {
 app.get('/api/settings', (req, res) => {
   const out = {};
   for (const r of db.prepare('SELECT key, value FROM settings').all()) {
-    if (SECRET_KEYS.includes(r.key)) continue;
+    // Never expose secrets or the auth hash/secret to the browser.
+    if (SECRET_KEYS.includes(r.key) || ['authHash', 'authSecret'].includes(r.key)) continue;
     try { out[r.key] = JSON.parse(r.value); } catch { /* skip bad row */ }
   }
   out.anthropicApiKeySet = Boolean(getSetting('anthropicApiKey'));
   out.pagespeedApiKeySet = Boolean(getSetting('pagespeedApiKey'));
+  out.smtpPassSet = Boolean(getSetting('smtpPass'));
+  out.authEnabled = authEnabled();
   out.aiConfigured = aiConfigured();
+  out.mailConfigured = mailConfigured();
   const browser = findBrowser();
   out.screenshotBrowser = browser ? path.basename(browser) : null;
   out.reportPort = reports.REPORT_PORT;
@@ -209,11 +297,20 @@ const upsertSetting = db.prepare(
   'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
 );
 
+const AUTH_KEYS = ['authEnabled', 'authPassword', 'authDisable', 'authHash', 'authSecret'];
+
 app.put('/api/settings', (req, res) => {
   const body = req.body || {};
   db.transaction(() => {
+    // Password handling is explicit; the raw hash/secret can never be set through this loop.
+    if (typeof body.authPassword === 'string' && body.authPassword.trim()) {
+      authSecret(); // make sure a signing secret exists
+      upsertSetting.run('authHash', JSON.stringify(hashPassword(body.authPassword.trim())));
+    }
+    if (body.authDisable === true) db.prepare('DELETE FROM settings WHERE key=?').run('authHash');
     for (const [key, value] of Object.entries(body)) {
-      if (['anthropicApiKeySet', 'pagespeedApiKeySet', 'aiConfigured', 'screenshotBrowser', 'reportPort', 'publicBaseUrl'].includes(key)) continue;
+      if (AUTH_KEYS.includes(key)) continue;
+      if (['anthropicApiKeySet', 'pagespeedApiKeySet', 'smtpPassSet', 'aiConfigured', 'mailConfigured', 'screenshotBrowser', 'reportPort', 'publicBaseUrl'].includes(key)) continue;
       if (SECRET_KEYS.includes(key)) {
         // null removes a secret, an empty string leaves it unchanged
         if (value === null) db.prepare('DELETE FROM settings WHERE key=?').run(key);
@@ -224,6 +321,78 @@ app.put('/api/settings', (req, res) => {
     }
   })();
   res.json({ ok: true });
+});
+
+// ── Backup / restore (the whole database as one JSON file) ──
+// leads.db is never in git and never leaves this computer, so this is how you move
+// your data to another machine or keep a safety copy.
+const BACKUP_TABLES = ['leads', 'settings', 'quotes', 'outreach', 'messages', 'reports', 'report_views'];
+
+app.get('/api/backup', (req, res) => {
+  const tables = {};
+  for (const table of BACKUP_TABLES) tables[table] = db.prepare(`SELECT * FROM ${table}`).all();
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Disposition', `attachment; filename="leadgen-backup-${stamp}.json"`);
+  res.type('application/json').send(JSON.stringify({
+    app: 'lead-generator', version: 1, exportedAt: new Date().toISOString(), tables,
+  }, null, 2));
+});
+
+app.post('/api/restore', (req, res) => {
+  const body = req.body || {};
+  if (body.app !== 'lead-generator' || !body.tables || typeof body.tables !== 'object') {
+    return res.status(400).json({ error: 'invalid_backup' });
+  }
+  try {
+    const counts = {};
+    db.transaction(() => {
+      for (const table of BACKUP_TABLES) {
+        const rows = body.tables[table];
+        if (!Array.isArray(rows)) continue;
+        db.prepare(`DELETE FROM ${table}`).run();
+        for (const row of rows) {
+          const cols = Object.keys(row);
+          if (!cols.length) continue;
+          db.prepare(`INSERT INTO ${table} (${cols.map(c => `"${c}"`).join(',')}) VALUES (${cols.map(() => '?').join(',')})`)
+            .run(...cols.map(c => row[c]));
+        }
+        counts[table] = rows.length;
+      }
+    })();
+    res.json({ ok: true, counts });
+  } catch (err) {
+    console.error('Restore failed:', err);
+    res.status(500).json({ error: 'restore_failed' });
+  }
+});
+
+// ── Sending email directly (SMTP) ──
+app.post('/api/smtp-test', async (req, res) => {
+  try {
+    await verifyMail();
+    res.json({ ok: true });
+  } catch (err) {
+    const status = err instanceof MailError && err.code === 'not_configured' ? 400 : 502;
+    res.status(status).json({ error: (err && err.code) || 'send_failed', message: err && err.message });
+  }
+});
+
+app.post('/api/send-email', async (req, res) => {
+  const body = req.body || {};
+  const lead = db.prepare('SELECT * FROM leads WHERE id=?').get(body.leadId);
+  if (!lead) return res.status(404).json({ error: 'lead_not_found' });
+  const to = (body.to && String(body.to).trim()) || lead.email;
+  try {
+    const info = await sendMail({ to, subject: body.subject, text: body.body });
+    res.json({ ok: true, to, messageId: info.messageId });
+  } catch (err) {
+    if (err instanceof MailError) {
+      const status = ['not_configured', 'no_recipient'].includes(err.code) ? 400 : 502;
+      return res.status(status).json({ error: err.code, message: err.message });
+    }
+    console.error('Send email failed:', err);
+    res.status(500).json({ error: 'send_failed' });
+  }
 });
 
 // ── Outreach drafts (one per lead) ──
@@ -288,6 +457,58 @@ app.delete('/api/quotes/:leadId', (req, res) => {
   db.prepare('DELETE FROM quotes WHERE lead_id=?').run(req.params.leadId);
   res.json({ ok: true });
 });
+
+// ── Automatic background rescans ──
+// Refresh already-scanned leads on a schedule so you notice a site going offline
+// or a certificate about to expire. Runs only while this process is up.
+let autoRescanBusy = false;
+
+async function rescanLeadRow(lead) {
+  let prev = null;
+  try { prev = lead.scan_result ? JSON.parse(lead.scan_result) : null; } catch { /* ignore */ }
+  const result = await scanSite(lead.url, { pagespeedKey: getSetting('pagespeedApiKey') });
+  const logo = (prev && prev.logo) || (result.logo ? saveImage(`${lead.id}-logo`, result.logo.buffer, result.logo.type) : null);
+  const scanResult = {
+    success: true,
+    url: result.finalUrl,
+    statusCode: result.statusCode,
+    findings: result.findings,
+    contact: result.contact,
+    profile: result.profile,
+    screenshots: prev ? prev.screenshots || null : null, // background scans take no screenshots
+    logo,
+    scannedAt: new Date().toISOString(),
+    autoScanned: true,
+  };
+  // Fill in a contact email we didn't have yet, but never overwrite one you curated
+  const email = (lead.email && lead.email.trim()) ? lead.email : (result.contact && result.contact.email) || lead.email || '';
+  db.prepare('UPDATE leads SET scan_result=?, email=? WHERE id=?').run(JSON.stringify(scanResult), email, lead.id);
+}
+
+async function autoRescanTick() {
+  if (autoRescanBusy) return;
+  const days = Number(getSetting('autoRescanDays')) || 0;
+  if (!days) return;
+  autoRescanBusy = true;
+  try {
+    const cutoff = Date.now() - days * 864e5;
+    const stale = db.prepare('SELECT * FROM leads').all().filter(l => {
+      if (!l.scan_result) return false; // only refresh leads that were scanned before
+      let sr; try { sr = JSON.parse(l.scan_result); } catch { return false; }
+      return sr && sr.success && sr.scannedAt && Date.parse(sr.scannedAt) < cutoff;
+    });
+    for (const lead of stale.slice(0, 5)) { // a few per tick to stay gentle
+      try { await rescanLeadRow(lead); }
+      catch (err) { console.error('Auto-rescan failed for', lead.url, '-', err.message); }
+    }
+    if (stale.length) console.log(`Auto-rescan: refreshed ${Math.min(stale.length, 5)} of ${stale.length} stale lead(s)`);
+  } finally {
+    autoRescanBusy = false;
+  }
+}
+
+setInterval(autoRescanTick, 60 * 60 * 1000).unref(); // check hourly
+setTimeout(autoRescanTick, 30 * 1000).unref();       // and once shortly after startup
 
 // ── Start ──
 // Report pages get their own server so you can put only that one online (e.g. via a Cloudflare Tunnel)

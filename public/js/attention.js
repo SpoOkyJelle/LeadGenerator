@@ -20,6 +20,25 @@ function priority(l) {
   return c.critical * 3 + c.warning;
 }
 
+// Time-sensitive problems in the latest scan that are worth acting on right away
+function leadAlerts(l) {
+  if (scanState(l) !== 'done') return [];
+  const out = [];
+  for (const f of (l.scanResult.findings || [])) {
+    if (f.tech === 'Availability' && f.severity === 'critical') out.push({ kind: 'offline' });
+    else if (f.tech === 'SSL Certificate' && f.status === 'expired') out.push({ kind: 'certExpired' });
+    else if (f.tech === 'SSL Certificate' && f.status === 'invalid') out.push({ kind: 'certInvalid' });
+    else if (f.tech === 'SSL Certificate' && f.status === 'expiring') out.push({ kind: 'certExpiring', days: f.days });
+    else if (f.tech === 'SSL/HTTPS' && f.severity === 'critical') out.push({ kind: 'noHttps' });
+  }
+  return out;
+}
+
+function alertLabel(a) {
+  if (a.kind === 'certExpiring') return t('alertCertExpiring', a.days != null ? a.days : '?');
+  return t({ offline: 'alertOffline', certExpired: 'alertCertExpired', certInvalid: 'alertCertInvalid', noHttps: 'alertNoHttps' }[a.kind] || 'alertOffline');
+}
+
 function attentionData() {
   const plannedLeadIds = new Set(messages.filter(m => m.status !== 'sent').map(m => m.leadId));
   const due = messages.filter(isDue).sort((a, b) => (a.planFor || '').localeCompare(b.planFor || ''));
@@ -32,13 +51,17 @@ function attentionData() {
     return !m || daysSince(m.sentAt) >= FOLLOW_UP_DAYS;
   });
   const openQuotes = leads.filter(l => l.quote && (l.status === 'new' || l.status === 'contacted'));
+  const alerts = leads
+    .filter(l => l.status !== 'rejected')
+    .map(l => ({ l, items: leadAlerts(l) }))
+    .filter(a => a.items.length);
   const unscanned = leads.filter(l => ['none', 'error'].includes(scanState(l))).length;
   // Opened their report in the last week and no outcome yet: the warmest moment to call
   const weekAgo = Date.now() - 7 * 864e5;
   const viewed = leads
     .filter(l => l.report && l.report.lastViewAt > weekAgo && (l.status === 'new' || l.status === 'contacted'))
     .sort((a, b) => b.report.lastViewAt - a.report.lastViewAt);
-  return { viewed, due, ready, followUp, openQuotes, unscanned };
+  return { viewed, due, ready, followUp, openQuotes, alerts, unscanned };
 }
 
 function statCard(label, value, sub, icon, tone) {
@@ -89,7 +112,23 @@ function renderAttention(a) {
     statCard(t('kpiValue'), moneyRound(value), t('kpiValueSub'), 'fa-euro-sign', 'tone-green') +
     '</div>';
 
-  const nothing = !a.viewed.length && !a.due.length && !a.ready.length && !a.followUp.length && !a.openQuotes.length;
+  const nothing = !a.alerts.length && !a.viewed.length && !a.due.length && !a.ready.length && !a.followUp.length && !a.openQuotes.length;
+
+  // Urgent, time-sensitive problems from the latest scan
+  if (a.alerts.length) {
+    html += sectionHead(t('secAlerts'), a.alerts.length, t('secAlertsHint'));
+    html += '<div class="card rows">' + a.alerts.map(({ l, items }) => {
+      const id = esc(l.id);
+      const labels = items.map(it => '<span style="display:inline-flex;align-items:center;gap:5px;color:var(--red);font-weight:500"><i class="fa-solid fa-triangle-exclamation"></i>' + esc(alertLabel(it)) + '</span>').join('');
+      return '<div class="row-item">' + favicon(l.url) +
+        '<div class="grow">' + leadLink(l) + '<div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:3px">' + labels + '</div></div>' +
+        '<div class="row-actions-static">' +
+          '<button class="btn btn-ghost btn-sm" onclick="scanLead(\'' + id + '\')"><i class="fa-solid fa-satellite-dish"></i>' + esc(t('rescanLead')) + '</button>' +
+          '<a class="btn btn-secondary btn-sm" href="#/lead/' + encodeURIComponent(l.id) + '">' + esc(t('viewLead')) + '</a>' +
+          (l.status !== 'rejected' ? '<a class="btn btn-primary btn-sm" href="#/lead/' + encodeURIComponent(l.id) + '/outreach"><i class="fa-solid fa-wand-magic-sparkles"></i>' + esc(t('writeOutreach')) + '</a>' : '') +
+        '</div></div>';
+    }).join('') + '</div>';
+  }
 
   // 0. Opened their report recently: call while it's fresh
   if (a.viewed.length) {

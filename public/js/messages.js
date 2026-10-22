@@ -114,6 +114,27 @@ async function sendDraftNow() {
   toast(t('toastMsgSent'), 'success');
 }
 
+// Really send the saved message by email, then mark it sent (outward-facing → confirm first)
+async function sendMsgEmail(id) {
+  const m = messages.find(x => x.id === id);
+  if (!m) return;
+  const l = leads.find(x => x.id === m.leadId);
+  if (!settings.mailConfigured) { toast(t('toastSmtpNotSet'), 'error'); return; }
+  if (!l || !l.email) { toast(t('toastNoEmailAddr'), 'error'); return; }
+  openConfirm(t('sendEmailTitle'), t('sendEmailText', l.email), t('sendEmailConfirm'), false, async () => {
+    const res = await fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leadId: l.id, subject: m.subject, body: m.body }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { toast(t('toastEmailFail', data.message || data.error || ''), 'error'); return; }
+    m.status = 'sent';
+    m.sentAt = Date.now();
+    await apiSaveMessage(m);
+    if (l.status === 'new') await saveLead(l.id, { status: 'contacted' });
+    render();
+    toast(t('toastEmailSent', data.to || l.email), 'success');
+  });
+}
+
 async function markMsgSent(id) {
   const m = messages.find(x => x.id === id);
   if (!m) return;
@@ -222,8 +243,10 @@ function msgCard(m) {
         '<button class="btn btn-secondary btn-sm" onclick="copyMsg(\'' + id + '\')"><i class="fa-regular fa-copy"></i>' + esc(t('copy')) + '</button>' +
         (m.reportMode === 'attach' && l && l.scanResult ? '<button class="btn btn-secondary btn-sm" onclick="downloadPdf(\'' + esc(m.leadId) + '\')" title="' + esc(t('repAttachHint')) + '"><i class="fa-solid fa-paperclip"></i>' + esc(t('downloadReport')) + '</button>' : '') +
         (m.channel === 'email' ? '<button class="btn btn-secondary btn-sm" onclick="openMsgMail(\'' + id + '\')"><i class="fa-regular fa-envelope"></i>' + esc(t('openMail')) + '</button>' : '') +
+        (m.channel === 'email' && m.status !== 'sent' && settings.mailConfigured && l && l.email
+          ? '<button class="btn btn-primary btn-sm" onclick="sendMsgEmail(\'' + id + '\')"><i class="fa-solid fa-paper-plane"></i>' + esc(t('sendEmail')) + '</button>' : '') +
         (m.status !== 'sent'
-          ? '<button class="btn btn-primary btn-sm" onclick="markMsgSent(\'' + id + '\')"><i class="fa-solid fa-paper-plane"></i>' + esc(t('markSent')) + '</button>'
+          ? '<button class="btn btn-' + (m.channel === 'email' && settings.mailConfigured && l && l.email ? 'secondary' : 'primary') + ' btn-sm" onclick="markMsgSent(\'' + id + '\')"><i class="fa-solid fa-check"></i>' + esc(t('markSent')) + '</button>'
           : '<a class="btn btn-secondary btn-sm" href="#/lead/' + encodeURIComponent(m.leadId) + '/outreach"><i class="fa-solid fa-reply"></i>' + esc(t('followUp')) + '</a>') +
       '</div>';
   }

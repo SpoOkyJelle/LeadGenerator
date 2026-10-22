@@ -125,6 +125,7 @@ function renderOutreach() {
   const findings = st === 'done' ? l.scanResult.findings.filter(f => f.severity !== 'info') : [];
   const generating = outreachGeneratingId === l.id;
   const hasBody = Boolean(d.body && d.body.trim());
+  const canSendEmail = hasBody && d.channel === 'email' && settings.mailConfigured && l.email;
 
   let html = '<div class="hero fade-in"><div class="hero-left">' + favicon(l.url, true) + '<div style="min-width:0">' +
     '<h1 class="hero-title">' + esc(t('outreach')) + '</h1>' +
@@ -137,7 +138,8 @@ function renderOutreach() {
       (d.channel === 'phone' && l.phone ? '<a class="btn btn-secondary" href="tel:' + esc(l.phone) + '"><i class="fa-solid fa-phone"></i>' + esc(t('callNow')) + ' ' + esc(l.phone) + '</a>' : '') +
       (hasBody
         ? '<button class="btn btn-secondary" onclick="openSchedule()"><i class="fa-regular fa-bookmark"></i>' + esc(t('saveForLater')) + '</button>' +
-          '<button class="btn btn-primary" onclick="sendDraftNow()"><i class="fa-solid fa-paper-plane"></i>' + esc(t('markSent')) + '</button>'
+          (canSendEmail ? '<button class="btn btn-primary" onclick="sendEmailNow()"><i class="fa-solid fa-paper-plane"></i>' + esc(t('sendEmail')) + '</button>' : '') +
+          '<button class="btn btn-' + (canSendEmail ? 'secondary' : 'primary') + '" onclick="sendDraftNow()"><i class="fa-solid fa-check"></i>' + esc(t('markSent')) + '</button>'
         : '<a class="btn btn-secondary" href="#/lead/' + encodeURIComponent(l.id) + '/quote"><i class="fa-solid fa-file-invoice"></i>' + esc(l.quote ? t('openQuote') : t('createQuote')) + '</a>') +
     '</div></div>';
 
@@ -448,4 +450,24 @@ function openOutreachMail() {
   if (!d) return;
   const l = currentLead();
   location.href = mailtoFor(l && l.email, d.subject, d.body);
+}
+
+// Send the current draft by email through the configured mail server, then log it as sent.
+async function sendEmailNow() {
+  const l = currentLead(), d = outreachDraft;
+  if (!l || !d || !d.body.trim()) return;
+  if (!settings.mailConfigured) { toast(t('toastSmtpNotSet'), 'error'); return; }
+  if (!l.email) { toast(t('toastNoEmailAddr'), 'error'); return; }
+  openConfirm(t('sendEmailTitle'), t('sendEmailText', l.email), t('sendEmailConfirm'), false, async () => {
+    const res = await fetch('/api/send-email', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leadId: l.id, subject: d.subject, body: d.body }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { toast(t('toastEmailFail', data.message || data.error || ''), 'error'); return; }
+    const m = draftToMessage(l.id, d, { status: 'sent', sentAt: Date.now() });
+    await apiSaveMessage(m);
+    messages.unshift(m);
+    if (l.status === 'new') await saveLead(l.id, { status: 'contacted' });
+    render();
+    toast(t('toastEmailSent', data.to || l.email), 'success');
+  });
 }
