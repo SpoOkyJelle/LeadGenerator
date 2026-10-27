@@ -133,7 +133,7 @@ function route() {
     view = 'settings';
     currentId = null;
     if (prevView !== 'settings') settingsBuilt = false;
-  } else if (h === '#/attention' || h === '#/messages') {
+  } else if (h === '#/attention' || h === '#/messages' || h === '#/discover') {
     view = h.slice(2);
     currentId = null;
   } else {
@@ -150,7 +150,7 @@ function go(id) { location.hash = '#/lead/' + encodeURIComponent(id); }
 
 // ── Render ──
 function render() {
-  for (const v of ['list', 'detail', 'settings', 'quote', 'outreach', 'attention', 'messages']) $('view-' + v).hidden = view !== v;
+  for (const v of ['list', 'detail', 'settings', 'quote', 'outreach', 'attention', 'messages', 'discover']) $('view-' + v).hidden = view !== v;
 
   const a = attentionData();
   const attentionCount = a.alerts.length + a.viewed.length + a.ready.length + a.followUp.length + a.due.length;
@@ -160,12 +160,14 @@ function render() {
   $('nav-all').classList.toggle('active', view === 'list');
   $('nav-attention').classList.toggle('active', view === 'attention');
   $('nav-messages').classList.toggle('active', view === 'messages');
+  $('nav-discover').classList.toggle('active', view === 'discover');
   $('nav-settings').classList.toggle('active', view === 'settings');
 
   renderCrumbs();
   if (view === 'list') renderList();
   else if (view === 'attention') renderAttention(a);
   else if (view === 'messages') renderMessages();
+  else if (view === 'discover') renderDiscover();
   else if (view === 'detail') renderDetail();
   else if (view === 'settings') renderSettings();
   else if (view === 'outreach') renderOutreach();
@@ -174,7 +176,7 @@ function render() {
 
 function renderCrumbs() {
   const sep = '<i class="fa-solid fa-chevron-right sep"></i>';
-  const top = { list: 'allLeads', attention: 'needsAttention', messages: 'messages', settings: 'settings' };
+  const top = { list: 'allLeads', attention: 'needsAttention', messages: 'messages', discover: 'discover', settings: 'settings' };
   if (top[view]) {
     $('crumbs').innerHTML = '<span class="current">' + esc(t(top[view])) + '</span>';
     return;

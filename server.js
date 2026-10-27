@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const express = require('express');
 const { db, getSetting } = require('./lib/db');
 const { scanSite, fetchSiteLogo } = require('./lib/scanner');
+const { discoverBusinesses, DiscoverError } = require('./lib/discover');
 const { aiConfigured, generateOutreach, OutreachError } = require('./lib/ai');
 const { mailConfigured, verifyMail, sendMail, MailError } = require('./lib/mailer');
 const { takeScreenshots, findBrowser, screenshotPath, saveImage } = require('./lib/screenshot');
@@ -151,6 +152,24 @@ app.get('/api/scan', async (req, res) => {
       httpStatus: err.httpStatus || null,
       findings: [],
     });
+  }
+});
+
+// ── Discover local businesses (OpenStreetMap, free, no key) ──
+app.get('/api/discover', async (req, res) => {
+  const area = String(req.query.area || '').trim();
+  const type = String(req.query.type || 'all');
+  if (!area) return res.status(400).json({ error: 'no_area' });
+  try {
+    const result = await discoverBusinesses({ area, type });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    if (err instanceof DiscoverError) {
+      const status = err.code === 'area_not_found' || err.code === 'area_too_large' || err.code === 'no_area' ? 400 : 502;
+      return res.status(status).json({ error: err.code, message: err.message });
+    }
+    console.error('Discover failed:', err);
+    res.status(500).json({ error: 'discover_failed', message: err.message });
   }
 });
 

@@ -254,6 +254,86 @@ function findingText(f, lang) {
         : 'De server deed er ' + (f.responseMs / 1000).toFixed(1).replace('.', ',') + ' seconden over om te reageren. Bezoekers haken vaak al na 3 seconden af.',
       opportunity: nl ? 'Bied snelheidsoptimalisatie aan' : 'Offer speed optimisation',
     },
+    'Email Security': (() => {
+      if (!nl) return { title: f.title, description: f.description, opportunity: f.opportunity };
+      const dom = f.domain || '';
+      const opp = 'Bied het instellen van e-mailbeveiliging (SPF, DKIM en DMARC) aan';
+      if (f.issue === 'dmarc_none') return {
+        title: 'DMARC staat alleen op monitoren (p=none)',
+        description: 'Het DMARC-beleid voor ' + dom + ' staat op “none”: het rapporteert alleen en blokkeert vervalste e-mail niet. Met quarantine of reject wordt spoofing echt tegengehouden.',
+        opportunity: 'Bied aan het DMARC-beleid aan te scherpen naar quarantine/reject' };
+      if (f.issue === 'spf_missing') return {
+        title: 'Geen SPF-record ingesteld',
+        description: 'Het domein ' + dom + ' heeft geen SPF-record. SPF bepaalt welke servers namens het domein mogen mailen; zonder SPF belandt mail vaker in spam en is het domein makkelijker te vervalsen.',
+        opportunity: opp };
+      return {
+        title: 'Geen DMARC-record — domein is te vervalsen',
+        description: 'Het domein ' + dom + ' heeft geen DMARC-record, waardoor iedereen e-mail kan versturen die lijkt te komen van dit domein (spoofing/phishing) en de eigen mail vaker in spam belandt.',
+        opportunity: opp };
+    })(),
+    'Exposed Files': (() => {
+      if (!nl) return { title: f.title, description: f.description, opportunity: f.opportunity };
+      if (f.issue === 'xmlrpc') return {
+        title: 'WordPress XML-RPC staat aan',
+        description: 'Het adres /xmlrpc.php is bereikbaar. Dit is een veelgebruikt doelwit voor brute-force-aanvallen en DDoS-versterking en is op moderne sites zelden nodig.',
+        opportunity: 'Bied WordPress-hardening aan (XML-RPC uitschakelen)' };
+      return {
+        title: 'WordPress readme.html is openbaar toegankelijk' + (f.version ? ' (toont versie ' + f.version + ')' : ''),
+        description: 'Het bestand /readme.html is bereikbaar' + (f.version ? ' en toont de exacte WordPress-versie (' + f.version + ')' : '') + '. Aanvallers gebruiken dit om passende exploits te vinden; het hoort afgeschermd of verwijderd te worden.',
+        opportunity: 'Bied WordPress-hardening aan (bestanden afschermen, versie verbergen)' };
+    })(),
+    'Mixed Content': {
+      title: nl ? 'Onveilige (http) inhoud op een beveiligde pagina' : f.title,
+      description: nl ? 'De pagina laadt bronnen via onbeveiligd http' + (f.hosts && f.hosts.length ? ' van ' + f.hosts.slice(0, 3).join(', ') : '') + '. Browsers kunnen die blokkeren of het slotje afzwakken, waardoor de site onveilig of kapot lijkt.' : f.description,
+      opportunity: nl ? 'Bied aan mixed content op te lossen en HTTPS volledig af te ronden' : f.opportunity,
+    },
+    'Broken Links': {
+      title: nl ? f.count + ' gebroken link' + (f.count === 1 ? '' : 's') + ' gevonden' : f.title,
+      description: nl ? 'Van ' + f.checked + ' gecontroleerde links op de homepage gaven er ' + f.count + ' een fout (dode link). Gebroken links irriteren bezoekers en schaden de SEO.' : f.description,
+      opportunity: nl ? 'Bied een link-audit en reparatie aan' : f.opportunity,
+    },
+    'Accessibility': {
+      title: nl ? f.missing + ' van ' + f.total + ' afbeeldingen zonder alt-tekst' : f.title,
+      description: nl ? 'De meeste afbeeldingen op de homepage hebben geen alt-tekst. Schermlezers kunnen ze niet beschrijven en zoekmachines niet lezen, wat de toegankelijkheid en SEO schaadt.' : f.description,
+      opportunity: nl ? 'Bied een toegankelijkheidsronde aan (alt-teksten en basis)' : f.opportunity,
+    },
+    'WordPress Plugins': {
+      title: nl ? f.pluginCount + ' WordPress-plugin' + (f.pluginCount === 1 ? '' : 's') + ' gedetecteerd' : f.title,
+      description: nl ? f.pluginCount + ' plugin(s)' + (f.themeCount ? ' en ' + f.themeCount + ' thema(’s)' : '') + ' gevonden' + (f.plugins && f.plugins.length ? ': ' + f.plugins.slice(0, 8).join(', ') + (f.plugins.length > 8 ? '…' : '') : '') + '. Elke plugin is extra aanvalsoppervlak, en verouderde plugins zijn de meest voorkomende manier waarop WordPress-sites gehackt worden.' : f.description,
+      opportunity: nl ? 'Bied WordPress-onderhoud en plugin-updates aan' : f.opportunity,
+    },
+    'Tech Stack': {
+      title: nl ? 'Ook gedetecteerd: ' + (f.items || []).join(', ') : f.title,
+      description: nl ? 'Extra techniek gedetecteerd op de site: ' + (f.items || []).join(', ') + '.' : f.description,
+      opportunity: f.opportunity,
+    },
+    'SEO Extras': (() => {
+      const names = { 'canonical link': 'canonical-link', 'structured data': 'gestructureerde data (schema.org)', 'language attribute': 'taalkenmerk (lang)', 'favicon': 'favicon' };
+      const list = (f.missing || []).map(m => names[m] || m).join(', ');
+      return {
+        title: nl ? 'SEO-extra’s ontbreken: ' + list : f.title,
+        description: nl ? 'De homepage mist: ' + list + '. Die helpen zoekmachines en browsers de site goed te begrijpen en te tonen.' : f.description,
+        opportunity: f.opportunity,
+      };
+    })(),
+    'Social Sharing': {
+      title: nl ? 'Geen social media-voorvertoning (Open Graph)' : f.title,
+      description: nl ? 'De pagina heeft geen Open Graph- of Twitter Card-tags, dus bij delen op social media of in chat-apps verschijnt er geen titel, omschrijving of afbeelding.' : f.description,
+      opportunity: nl ? 'Bied aan social media-voorvertoning (Open Graph) toe te voegen' : f.opportunity,
+    },
+    'Indexing': (() => {
+      const list = (f.missing || []).join(nl ? ' en ' : ' and ');
+      return {
+        title: nl ? 'Ontbreekt: ' + list : f.title,
+        description: nl ? 'De site heeft geen ' + list + '. Die helpen zoekmachines om alle pagina’s efficiënt te vinden en te indexeren.' : f.description,
+        opportunity: nl ? 'Bied technische SEO-inrichting aan (robots.txt en sitemap)' : f.opportunity,
+      };
+    })(),
+    'Page SEO': {
+      title: nl ? f.count + ' pagina' + (f.count === 1 ? '' : '’s') + ' zonder paginatitel' : f.title,
+      description: nl ? 'Enkele interne pagina’s hebben geen <title>. Elke pagina heeft een eigen titel nodig om goed in Google te verschijnen.' : f.description,
+      opportunity: nl ? 'Bied SEO per pagina aan (unieke titels en omschrijvingen)' : f.opportunity,
+    },
   };
 
   return templates[f.tech] || { title: f.title, description: f.description, opportunity: f.opportunity };

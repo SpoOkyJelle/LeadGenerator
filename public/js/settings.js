@@ -20,6 +20,11 @@ const SERVICE_DEFS = [
   { tech: 'Privacy',          hours: 2,   nl: 'Privacyverklaring opstellen en plaatsen',        en: 'Write and add a privacy statement' },
   { tech: 'Cookies',          hours: 3,   nl: 'AVG-proof cookiemelding installeren',            en: 'GDPR-compliant cookie banner' },
   { tech: 'Copyright',        hours: 1,   nl: 'Content en footer bijwerken',                    en: 'Content and footer update' },
+  { tech: 'Email Security',   hours: 2,   nl: 'E-mailbeveiliging instellen (SPF, DKIM, DMARC)', en: 'Email authentication setup (SPF, DKIM, DMARC)' },
+  { tech: 'Exposed Files',    hours: 2,   nl: 'WordPress hardening (bestanden afschermen)',     en: 'WordPress hardening (block exposed files)' },
+  { tech: 'Mixed Content',    hours: 2,   nl: 'Mixed content oplossen (volledige HTTPS)',       en: 'Fix mixed content (complete HTTPS)' },
+  { tech: 'Broken Links',     hours: 2,   nl: 'Gebroken links opsporen en repareren',           en: 'Broken link audit and fixes' },
+  { tech: 'Accessibility',    hours: 4,   nl: 'Toegankelijkheid verbeteren (alt-teksten, basis)', en: 'Accessibility pass (alt texts and basics)' },
 ];
 
 const DEFAULT_SETTINGS = {
