@@ -31,12 +31,17 @@ const SERVICE_DEFS = [
   { tech: 'Cookie Security',  hours: 1.5, nl: 'Cookies beveiligen (Secure, HttpOnly, SameSite)', en: 'Secure cookies (Secure, HttpOnly, SameSite)' },
   { tech: 'Image Optimization', hours: 3, nl: 'Afbeeldingen optimaliseren (moderne formaten, lazy load)', en: 'Image optimisation (modern formats, lazy loading)' },
   { tech: 'Compression',      hours: 1,   nl: 'Compressie (gzip/Brotli) inschakelen',           en: 'Enable compression (gzip/Brotli)' },
+  { tech: 'Weak TLS',         hours: 1,   nl: 'Oude TLS-versies uitschakelen (alleen 1.2/1.3)', en: 'Disable old TLS versions (keep 1.2/1.3)' },
+  { tech: 'Insecure Form',    hours: 2,   nl: 'Formulieren en logins naar HTTPS verplaatsen',   en: 'Move forms and logins to HTTPS' },
+  { tech: 'Info Disclosure',  hours: 1,   nl: 'Versie-/software-headers verbergen',             en: 'Hide version/software headers' },
+  { tech: 'Weak CSP',         hours: 2,   nl: 'Content-Security-Policy aanscherpen',            en: 'Tighten the Content-Security-Policy' },
+  { tech: 'SRI',              hours: 1.5, nl: 'Subresource Integrity toevoegen aan scripts',    en: 'Add Subresource Integrity to scripts' },
 ];
 
 const DEFAULT_SETTINGS = {
   companyName: '', contactName: '', email: '', phone: '', address: '', website: '',
   kvk: '', vatNumber: '', iban: '',
-  hourlyRate: 75, vatRate: 21, validDays: 30, quotePrefix: 'OFF-', nextQuoteNumber: 1,
+  hourlyRate: 75, vatRate: 21, validDays: 30, quotePrefix: 'OFF-', nextQuoteNumber: 1, hostingPrice: 0,
   introText: '', termsText: '',
   smtpHost: '', smtpPort: 587, smtpSecure: false, smtpUser: '', smtpFrom: '',
   autoRescanDays: 0,
@@ -134,6 +139,7 @@ function renderSettings() {
         field('hourlyRate', t('sHourlyRate'), { num: true, step: 1, pre: '€' }) +
         field('vatRate', t('sVatRate'), { num: true, step: 1, suf: '%' }) +
         field('validDays', t('sValidDays'), { num: true, step: 1, suf: t('days') }) +
+        field('hostingPrice', t('sHostingPrice'), { num: true, step: 1, pre: '€', suf: t('perMonth'), hint: t('hostingPriceHint') }) +
         field('quotePrefix', t('sQuotePrefix'), { ph: 'OFF-' }) +
         field('nextQuoteNumber', t('sNextNumber'), { num: true, step: 1, hint: '' }) +
       '</div>') +

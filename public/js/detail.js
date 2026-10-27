@@ -14,11 +14,15 @@ const techIcon = {
   'HTTPS Redirect': 'fa-solid fa-arrow-right-arrow-left', 'Cookie Security': 'fa-solid fa-cookie-bite',
   'Image Optimization': 'fa-regular fa-image', 'Compression': 'fa-solid fa-file-zipper',
   'Exposed Files': 'fa-solid fa-folder-open',
+  'Info Disclosure': 'fa-solid fa-circle-info', 'Weak CSP': 'fa-solid fa-shield-halved',
+  'Insecure Form': 'fa-solid fa-unlock-keyhole', 'SRI': 'fa-solid fa-link-slash',
+  'Weak TLS': 'fa-solid fa-lock', 'Hosting': 'fa-solid fa-server',
 };
 
 // Findings about the site itself rather than a piece of software
 const NON_TECH = ['Availability', 'Security Headers','SSL/HTTPS', 'SSL Certificate', 'Copyright', 'Mobile', 'SEO', 'Privacy', 'Cookies', 'Performance',
-  'Indexability', 'Local SEO', 'HTTPS Redirect', 'Cookie Security', 'Image Optimization', 'Compression'];
+  'Indexability', 'Local SEO', 'HTTPS Redirect', 'Cookie Security', 'Image Optimization', 'Compression',
+  'Info Disclosure', 'Weak CSP', 'Insecure Form', 'SRI', 'Weak TLS', 'Hosting'];
 
 function contactCard(l) {
   const c = (l.scanResult && l.scanResult.contact) || {};

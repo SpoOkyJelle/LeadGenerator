@@ -209,12 +209,14 @@ function findingText(f, lang) {
       title: !nl ? f.title
         : f.status === 'expired' ? 'SSL-certificaat is verlopen'
         : f.status === 'invalid' ? 'SSL-certificaat is ongeldig'
+        : f.status === 'weakkey' ? 'SSL-certificaat gebruikt een zwakke ' + f.bits + '-bits sleutel'
         : 'SSL-certificaat verloopt over ' + f.days + ' dagen',
       description: !nl ? f.description
         : f.status === 'expired' ? 'Het SSL-certificaat is verlopen op ' + fmtLong(parseISODate(f.validTo)) + '. Elke bezoeker krijgt nu een paginagrote beveiligingswaarschuwing te zien.'
         : f.status === 'invalid' ? 'Browsers vertrouwen het SSL-certificaat niet (' + (f.reason || 'onbekende reden') + '). Bezoekers kunnen een beveiligingswaarschuwing te zien krijgen.'
+        : f.status === 'weakkey' ? 'Het certificaat gebruikt een ' + f.bits + '-bits RSA-sleutel, onder het minimum van 2048 bits dat browsers en auditors verwachten. Opnieuw uitgeven met een moderne sleutel houdt de verbinding betrouwbaar.'
         : 'Het SSL-certificaat verloopt op ' + fmtLong(parseISODate(f.validTo)) + '. Als het niet op tijd wordt vernieuwd, krijgen bezoekers een beveiligingswaarschuwing.',
-      opportunity: nl ? 'Bied SSL-vernieuwing met automatische verlenging aan' : 'Offer SSL renewal with automatic renewal',
+      opportunity: nl ? (f.status === 'weakkey' ? 'Bied aan het certificaat opnieuw uit te geven met een sterke sleutel' : 'Bied SSL-vernieuwing met automatische verlenging aan') : (f.status === 'weakkey' ? 'Offer to reissue the certificate with a strong key' : 'Offer SSL renewal with automatic renewal'),
     },
     'Copyright': {
       title: nl ? 'Copyright-vermelding staat nog op ' + f.year : f.title,
@@ -378,6 +380,46 @@ function findingText(f, lang) {
       description: nl ? 'De server verstuurt de homepage zonder gzip- of Brotli-compressie, waardoor de HTML, CSS en JavaScript groter en trager zijn dan nodig. Compressie verkleint ze doorgaans met 60–80%.' : f.description,
       opportunity: nl ? 'Bied aan gzip/Brotli-compressie op de server in te schakelen' : f.opportunity,
     },
+    'Info Disclosure': {
+      title: nl ? 'Server toont zijn software en versie' : f.title,
+      description: nl ? 'De site stuurt ' + ((Array.isArray(f.items) ? f.items : []).join(' en ')) + ' mee. Het etaleren van de exacte software en versie helpt aanvallers passende exploits te vinden; deze headers kunnen verborgen of ingekort worden.' : f.description,
+      opportunity: nl ? 'Bied webbeveiliging aan (versie-/software-headers verbergen)' : f.opportunity,
+    },
+    'Weak CSP': {
+      title: nl ? 'Content-Security-Policy verzwakt door ' + ((Array.isArray(f.weak) ? f.weak : []).join(' en ')) : f.title,
+      description: nl ? 'Er is een Content-Security-Policy ingesteld, maar die staat ' + ((Array.isArray(f.weak) ? f.weak : []).join(' en ')) + ' toe, waardoor ingespoten scripts alsnog kunnen draaien en de policy grotendeels zinloos wordt tegen XSS.' : f.description,
+      opportunity: nl ? 'Bied aan de Content-Security-Policy aan te scherpen (unsafe-inline/eval verwijderen)' : f.opportunity,
+    },
+    'Insecure Form': {
+      title: nl ? (f.passwordInsecure ? 'Inlog-/wachtwoordveld wordt onversleuteld verzonden' : 'Een formulier verstuurt gegevens via een onbeveiligde (http) verbinding') : f.title,
+      description: nl ? (f.passwordInsecure
+        ? 'De pagina heeft een wachtwoord- of inlogveld dat via een onversleutelde verbinding wordt verstuurd. Iedereen op hetzelfde netwerk kan de inloggegevens onderweg meelezen — een ernstig risico.'
+        : 'Een formulier op de homepage verstuurt naar een gewoon http-adres, dus alles wat bezoekers invullen gaat onversleuteld en kan worden onderschept.') : f.description,
+      opportunity: nl ? 'Bied aan alle formulieren en logins naar HTTPS te verplaatsen' : f.opportunity,
+    },
+    'SRI': {
+      title: nl ? f.noSri + ' externe scripts geladen zonder integriteitscontrole' : f.title,
+      description: nl ? f.noSri + ' van de ' + f.external + ' externe scripts worden geladen zonder Subresource Integrity (een integriteits-hash). Als een van die aanbieders wordt gehackt, draait er ongemerkt kwaadaardige code op de site.' : f.description,
+      opportunity: nl ? 'Bied aan Subresource Integrity toe te voegen aan externe scripts' : f.opportunity,
+    },
+    'Weak TLS': {
+      title: nl ? 'Server accepteert nog ' + f.protocol + ' (verouderd)' : f.title,
+      description: nl ? 'De server staat nog ' + f.protocol + ' toe, een verouderd protocol dat moderne browsers weigeren en dat zakt voor PCI-/beveiligingsaudits. Alleen TLS 1.2 en 1.3 horen aan te staan.' : f.description,
+      opportunity: nl ? 'Bied aan oude TLS-versies uit te schakelen (alleen TLS 1.2/1.3)' : f.opportunity,
+    },
+    'Hosting': (() => {
+      const price = (typeof settings !== 'undefined' && Number(settings.hostingPrice) > 0) ? Number(settings.hostingPrice) : 0;
+      const pitchNl = price ? ' Bied jouw hosting aan vanaf €' + price + ' per maand.' : '';
+      const pitchEn = price ? ' Offer your hosting from €' + price + ' per month.' : '';
+      if (!nl) return { title: f.title, description: f.description, opportunity: f.opportunity + pitchEn };
+      return {
+        title: f.behindCdn ? 'Via ' + f.provider + ' (CDN) geleverd' : 'Gehost bij ' + f.provider,
+        description: (f.behindCdn
+          ? 'De site zit achter de ' + f.provider + '-CDN, waardoor de onderliggende hostingpartij verborgen is' + (f.server ? '; de origin draait ' + f.server : '') + '. Hosting en snelheid blijven een goede aanleiding voor een migratie-aanbod.'
+          : 'De website wordt gehost bij ' + f.provider + (f.server ? ' en draait ' + f.server : '') + '. Als jouw hosting sneller, beter ondersteund of goedkoper is, is dit een natuurlijke opening voor een migratie-aanbod.') + pitchNl,
+        opportunity: 'Bied managed hosting aan (migratie, onderhoud en support).' + pitchNl,
+      };
+    })(),
   };
 
   return templates[f.tech] || { title: f.title, description: f.description, opportunity: f.opportunity };
