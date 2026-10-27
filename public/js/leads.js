@@ -20,7 +20,7 @@ function renderStats() {
 
 function renderStatusSeg() {
   const base = leads;
-  const opts = [['all', t('all')], ['new', t('statusNew')], ['contacted', t('statusContacted')], ['qualified', t('statusQualified')], ['rejected', t('statusRejected')]];
+  const opts = [['all', t('all')], ['new', t('statusNew')], ['contacted', t('statusContacted')], ['qualified', t('statusQualified')], ['customer', t('statusCustomer')], ['rejected', t('statusRejected')]];
   $('status-seg').innerHTML = opts.map(([k, label]) => {
     const n = k === 'all' ? base.length : base.filter(l => l.status === k).length;
     return '<button class="' + (statusFilter === k ? 'active' : '') + '" onclick="setFilter(\'' + k + '\')">' + esc(label) + '<span class="n">' + n + '</span></button>';
@@ -57,7 +57,7 @@ function scanPill(l) {
 }
 
 function badge(status) {
-  const map = { new: t('statusNew'), contacted: t('statusContacted'), qualified: t('statusQualified'), rejected: t('statusRejected') };
+  const map = { new: t('statusNew'), contacted: t('statusContacted'), qualified: t('statusQualified'), customer: t('statusCustomer'), rejected: t('statusRejected') };
   const key = map[status] ? status : 'new';
   return '<span class="badge badge-' + key + '"><span class="dot"></span>' + esc(map[key]) + '</span>';
 }

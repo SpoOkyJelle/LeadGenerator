@@ -149,7 +149,7 @@ function renderDetail() {
   }
 
   // Side column
-  const statusOpts = ['new', 'contacted', 'qualified', 'rejected'].map(s =>
+  const statusOpts = ['new', 'contacted', 'qualified', 'customer', 'rejected'].map(s =>
     '<option value="' + s + '"' + (l.status === s ? ' selected' : '') + '>' + esc(t('status' + s[0].toUpperCase() + s.slice(1))) + '</option>').join('');
 
   let side = stepsCard(l) + reportCard(l) + quoteCard(l) +'<div class="card"><div class="card-head"><div class="card-title">' + esc(t('details')) + '</div></div><div class="card-body kv" style="padding-top:4px;padding-bottom:4px">' +

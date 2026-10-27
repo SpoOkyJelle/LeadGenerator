@@ -52,7 +52,7 @@ function attentionData() {
   });
   const openQuotes = leads.filter(l => l.quote && (l.status === 'new' || l.status === 'contacted'));
   const alerts = leads
-    .filter(l => l.status !== 'rejected')
+    .filter(l => l.status !== 'rejected' && l.status !== 'customer')
     .map(l => ({ l, items: leadAlerts(l) }))
     .filter(a => a.items.length);
   const unscanned = leads.filter(l => ['none', 'error'].includes(scanState(l))).length;

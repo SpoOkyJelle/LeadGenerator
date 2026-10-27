@@ -228,7 +228,7 @@ function findingText(f, lang) {
     },
     'SEO': (() => {
       const names = { 'title': 'paginatitel', 'meta description': 'meta-omschrijving', 'h1 heading': 'hoofdkop (h1)' };
-      const list = (f.missing || []).map(m => names[m] || m).join(', ');
+      const list = (Array.isArray(f.missing) ? f.missing : []).map(m => names[m] || m).join(', ');
       return {
         title: nl ? 'SEO-basis ontbreekt: ' + list : f.title,
         description: nl ? 'De homepage heeft geen ' + list + '. Die helpen Google om de site goed te tonen in de zoekresultaten.' : f.description,
@@ -309,7 +309,7 @@ function findingText(f, lang) {
     },
     'SEO Extras': (() => {
       const names = { 'canonical link': 'canonical-link', 'structured data': 'gestructureerde data (schema.org)', 'language attribute': 'taalkenmerk (lang)', 'favicon': 'favicon' };
-      const list = (f.missing || []).map(m => names[m] || m).join(', ');
+      const list = (Array.isArray(f.missing) ? f.missing : []).map(m => names[m] || m).join(', ');
       return {
         title: nl ? 'SEO-extra’s ontbreken: ' + list : f.title,
         description: nl ? 'De homepage mist: ' + list + '. Die helpen zoekmachines en browsers de site goed te begrijpen en te tonen.' : f.description,
@@ -322,7 +322,7 @@ function findingText(f, lang) {
       opportunity: nl ? 'Bied aan social media-voorvertoning (Open Graph) toe te voegen' : f.opportunity,
     },
     'Indexing': (() => {
-      const list = (f.missing || []).join(nl ? ' en ' : ' and ');
+      const list = (Array.isArray(f.missing) ? f.missing : []).join(nl ? ' en ' : ' and ');
       return {
         title: nl ? 'Ontbreekt: ' + list : f.title,
         description: nl ? 'De site heeft geen ' + list + '. Die helpen zoekmachines om alle pagina’s efficiënt te vinden en te indexeren.' : f.description,
