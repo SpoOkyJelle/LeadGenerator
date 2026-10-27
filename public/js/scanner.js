@@ -273,6 +273,14 @@ function findingText(f, lang) {
     })(),
     'Exposed Files': (() => {
       if (!nl) return { title: f.title, description: f.description, opportunity: f.opportunity };
+      if (f.issue === 'git') return {
+        title: 'Git-repository is openbaar toegankelijk (/.git/)',
+        description: 'De map /.git/ is bereikbaar, waardoor iedereen de volledige broncode én de geschiedenis kan downloaden — vaak inclusief wachtwoorden en sleutels die ooit zijn vastgelegd. Dit is een ernstig beveiligingslek.',
+        opportunity: 'Bied aan toegang tot /.git/ te blokkeren en op gelekte gegevens te controleren' };
+      if (f.issue === 'env') return {
+        title: 'Configuratiebestand (.env) is openbaar toegankelijk',
+        description: 'Het bestand /.env is bereikbaar. Zulke bestanden bevatten meestal wachtwoorden, API-sleutels en database-gegevens in platte tekst — een kritieke blootstelling.',
+        opportunity: 'Bied aan het .env-bestand te verwijderen/blokkeren en gelekte sleutels te vervangen' };
       if (f.issue === 'xmlrpc') return {
         title: 'WordPress XML-RPC staat aan',
         description: 'Het adres /xmlrpc.php is bereikbaar. Dit is een veelgebruikt doelwit voor brute-force-aanvallen en DDoS-versterking en is op moderne sites zelden nodig.',
@@ -333,6 +341,42 @@ function findingText(f, lang) {
       title: nl ? f.count + ' pagina' + (f.count === 1 ? '' : '’s') + ' zonder paginatitel' : f.title,
       description: nl ? 'Enkele interne pagina’s hebben geen <title>. Elke pagina heeft een eigen titel nodig om goed in Google te verschijnen.' : f.description,
       opportunity: nl ? 'Bied SEO per pagina aan (unieke titels en omschrijvingen)' : f.opportunity,
+    },
+    'Indexability': {
+      title: nl ? 'Pagina staat op “noindex” — onzichtbaar voor Google' : f.title,
+      description: nl ? 'De homepage heeft een noindex-instructie (' + (f.source === 'header' ? 'de X-Robots-Tag-header' : 'een meta robots-tag') + '), waardoor zoekmachines de site niet tonen. De site verschijnt dus niet in de zoekresultaten.' : f.description,
+      opportunity: nl ? 'Bied aan de noindex te verwijderen zodat de site weer in Google komt' : f.opportunity,
+    },
+    'Local SEO': (() => {
+      if (!nl) return { title: f.title, description: f.description, opportunity: f.opportunity };
+      const names = { localBusinessSchema: 'bedrijfsgegevens (schema.org)', telLink: 'klikbaar telefoonnummer', address: 'adres/postcode', openingHours: 'openingstijden', mapsEmbed: 'kaart (Google Maps)' };
+      const miss = Array.isArray(f.missing) ? f.missing : [];
+      const list = miss.map(m => names[m] || m).join(', ');
+      return {
+        title: 'Lokale SEO ontbreekt: ' + miss.length + ' van 5',
+        description: 'De homepage mist lokale signalen die helpen om gevonden te worden in Google Maps en lokale zoekresultaten, en om makkelijk contact te leggen: ' + list + '.',
+        opportunity: 'Bied lokale SEO-inrichting aan (bedrijfsgegevens, adres, openingstijden, klik-om-te-bellen, kaart)',
+      };
+    })(),
+    'HTTPS Redirect': {
+      title: nl ? 'Bezoekers op http:// worden niet doorgestuurd naar https://' : f.title,
+      description: nl ? 'De site opent via onbeveiligd http zonder door te sturen naar de beveiligde https-versie. Bezoekers en zoekmachines kunnen op de onversleutelde site belanden, wat de beveiliging verzwakt en SEO-waarde over twee adressen verdeelt.' : f.description,
+      opportunity: nl ? 'Bied aan HTTPS af te dwingen met een permanente redirect en HSTS' : f.opportunity,
+    },
+    'Cookie Security': {
+      title: nl ? Math.max(f.noSecure || 0, f.noHttpOnly || 0) + ' van ' + (f.count || 0) + ' cookies zonder beschermende instellingen' : f.title,
+      description: nl ? 'De site plaatst ' + (f.count || 0) + ' cookie(s), waarvan enkele de vlaggen Secure, HttpOnly of SameSite missen. Die vlaggen voorkomen dat cookies van bezoekers via een onveilige verbinding worden gelezen of door kwaadaardige scripts worden gestolen.' : f.description,
+      opportunity: nl ? 'Bied aan cookies te beveiligen (Secure-, HttpOnly- en SameSite-vlaggen)' : f.opportunity,
+    },
+    'Image Optimization': {
+      title: nl ? 'Afbeeldingen niet geoptimaliseerd voor het web' : f.title,
+      description: nl ? 'De homepage heeft ' + (f.total || 0) + ' afbeeldingen' + (f.noModern ? ', allemaal in oudere formaten (JPEG/PNG/GIF) in plaats van moderne WebP/AVIF' : '') + (f.noLazy ? (f.noModern ? ', en' : ',') + ' geen enkele gebruikt lazy loading' : '') + '. Geoptimaliseerde afbeeldingen en lazy loading maken de pagina merkbaar sneller, vooral op mobiel.' : f.description,
+      opportunity: nl ? 'Bied afbeeldingsoptimalisatie aan (moderne formaten en lazy loading)' : f.opportunity,
+    },
+    'Compression': {
+      title: nl ? 'Tekstcompressie staat uit' : f.title,
+      description: nl ? 'De server verstuurt de homepage zonder gzip- of Brotli-compressie, waardoor de HTML, CSS en JavaScript groter en trager zijn dan nodig. Compressie verkleint ze doorgaans met 60–80%.' : f.description,
+      opportunity: nl ? 'Bied aan gzip/Brotli-compressie op de server in te schakelen' : f.opportunity,
     },
   };
 

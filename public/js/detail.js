@@ -10,10 +10,15 @@ const techIcon = {
   'Mobile': 'fa-solid fa-mobile-screen', 'SEO': 'fa-solid fa-magnifying-glass-chart',
   'Privacy': 'fa-solid fa-user-shield', 'Cookies': 'fa-solid fa-cookie-bite',
   'Performance': 'fa-solid fa-gauge-high', 'Availability': 'fa-solid fa-plug-circle-xmark',
+  'Indexability': 'fa-brands fa-google', 'Local SEO': 'fa-solid fa-location-dot',
+  'HTTPS Redirect': 'fa-solid fa-arrow-right-arrow-left', 'Cookie Security': 'fa-solid fa-cookie-bite',
+  'Image Optimization': 'fa-regular fa-image', 'Compression': 'fa-solid fa-file-zipper',
+  'Exposed Files': 'fa-solid fa-folder-open',
 };
 
 // Findings about the site itself rather than a piece of software
-const NON_TECH = ['Availability', 'Security Headers','SSL/HTTPS', 'SSL Certificate', 'Copyright', 'Mobile', 'SEO', 'Privacy', 'Cookies', 'Performance'];
+const NON_TECH = ['Availability', 'Security Headers','SSL/HTTPS', 'SSL Certificate', 'Copyright', 'Mobile', 'SEO', 'Privacy', 'Cookies', 'Performance',
+  'Indexability', 'Local SEO', 'HTTPS Redirect', 'Cookie Security', 'Image Optimization', 'Compression'];
 
 function contactCard(l) {
   const c = (l.scanResult && l.scanResult.contact) || {};

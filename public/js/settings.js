@@ -25,6 +25,12 @@ const SERVICE_DEFS = [
   { tech: 'Mixed Content',    hours: 2,   nl: 'Mixed content oplossen (volledige HTTPS)',       en: 'Fix mixed content (complete HTTPS)' },
   { tech: 'Broken Links',     hours: 2,   nl: 'Gebroken links opsporen en repareren',           en: 'Broken link audit and fixes' },
   { tech: 'Accessibility',    hours: 4,   nl: 'Toegankelijkheid verbeteren (alt-teksten, basis)', en: 'Accessibility pass (alt texts and basics)' },
+  { tech: 'Indexability',     hours: 1,   nl: 'Noindex verwijderen zodat de site in Google komt', en: 'Remove noindex so the site appears in Google' },
+  { tech: 'Local SEO',        hours: 4,   nl: 'Lokale SEO inrichten (bedrijfsgegevens, schema, Google)', en: 'Local SEO setup (business details, schema, Google)' },
+  { tech: 'HTTPS Redirect',   hours: 1,   nl: 'HTTPS afdwingen (permanente redirect + HSTS)',   en: 'Enforce HTTPS (permanent redirect + HSTS)' },
+  { tech: 'Cookie Security',  hours: 1.5, nl: 'Cookies beveiligen (Secure, HttpOnly, SameSite)', en: 'Secure cookies (Secure, HttpOnly, SameSite)' },
+  { tech: 'Image Optimization', hours: 3, nl: 'Afbeeldingen optimaliseren (moderne formaten, lazy load)', en: 'Image optimisation (modern formats, lazy loading)' },
+  { tech: 'Compression',      hours: 1,   nl: 'Compressie (gzip/Brotli) inschakelen',           en: 'Enable compression (gzip/Brotli)' },
 ];
 
 const DEFAULT_SETTINGS = {
