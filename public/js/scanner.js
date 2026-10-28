@@ -74,6 +74,7 @@ async function scanLead(id, { quiet = false } = {}) {
 
 // Rescans every lead (or only the ones never scanned / failed) and reports one summary at the end
 let scanAllProgress = null;
+const SCAN_CONCURRENCY = 4; // the browser allows ~6 requests per server, so leave room for the dashboard
 
 async function scanAllLeads(onlyNew = false) {
   if (scanAllRunning) return;
@@ -86,17 +87,22 @@ async function scanAllLeads(onlyNew = false) {
   scanAllProgress = { done: 0, total: todo.length };
   render();
   let withIssues = 0, failed = 0, emails = 0;
-  for (const lead of todo) {
-    const hadEmail = Boolean(lead.email);
-    const sr = await scanLead(lead.id, { quiet: true });
-    if (sr && !sr.success) failed++;
-    else if (sr && sr.findings.some(f => f.severity !== 'info')) withIssues++;
-    const updated = leads.find(l => l.id === lead.id);
-    if (!hadEmail && updated && updated.email) emails++;
-    scanAllProgress.done++;
-    render();
-    await new Promise(r => setTimeout(r, 300));
-  }
+  // A few workers pull leads from a shared queue, so several sites are scanned at once
+  const queue = todo.slice();
+  const worker = async () => {
+    while (queue.length) {
+      const lead = queue.shift();
+      const hadEmail = Boolean(lead.email);
+      const sr = await scanLead(lead.id, { quiet: true });
+      if (sr && !sr.success) failed++;
+      else if (sr && sr.findings.some(f => f.severity !== 'info')) withIssues++;
+      const updated = leads.find(l => l.id === lead.id);
+      if (!hadEmail && updated && updated.email) emails++;
+      scanAllProgress.done++;
+      render();
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(SCAN_CONCURRENCY, todo.length) }, worker));
   scanAllRunning = false;
   scanAllProgress = null;
   render();
